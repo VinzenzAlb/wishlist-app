@@ -23,7 +23,7 @@
 </script>
 
 <header>
-	<div>
+	<div class="identity">
 		<p class="muted small">You are</p>
 		<h2>{identityUserName}</h2>
 		<button class="link" onclick={onReset}>Change user</button>
@@ -52,14 +52,20 @@
 	header {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: flex-end;
-		gap: 1rem;
+		align-items: center;
+		gap: 1.25rem;
 		justify-content: space-between;
 		background: #fff;
-		padding: 1rem 1.25rem;
-		border-radius: 14px;
-		box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+		padding: 1.1rem 1.4rem;
+		border-radius: 16px;
+		box-shadow: 0 14px 36px rgba(15, 23, 42, 0.12);
 		border: 1px solid #e2e8f0;
+	}
+
+	.identity {
+		display: flex;
+		flex-direction: column;
+		gap: 0.35rem;
 	}
 
 	.muted {

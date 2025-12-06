@@ -86,7 +86,7 @@
 	.card {
 		background: #fff;
 		border-radius: 14px;
-		padding: 1.35rem;
+		padding: 1.5rem;
 		box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
 		display: flex;
 		flex-direction: column;

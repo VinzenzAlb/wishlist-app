@@ -393,18 +393,19 @@ async function saveWish() {
 
 	:global(body) {
 		font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
-		background: radial-gradient(circle at 20% 20%, #f3f7ff, #eef2f6);
+		background: radial-gradient(circle at 25% 20%, #e5f0ff, #f7f9fb 50%, #eef2f6 100%);
 		color: #0f172a;
 		margin: 0;
+		min-height: 100vh;
 	}
 
 	section.page {
-		max-width: 1100px;
+		max-width: 1200px;
 		margin: 0 auto;
-		padding: 2rem 1.5rem 3rem;
+		padding: 2.5rem 1.5rem 3rem;
 		display: flex;
 		flex-direction: column;
-		gap: 1.5rem;
+		gap: 1.25rem;
 	}
 
 	.error {
@@ -417,11 +418,42 @@ async function saveWish() {
 		margin: 0.25rem 0 0;
 	}
 
-	.board {
-		display: grid;
-		grid-template-columns: 2fr 1fr;
+	.topbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
 		gap: 1rem;
-		align-items: start;
+		padding: 0 1.75rem 1.25rem;
+	}
+
+	.tabs {
+		display: inline-flex;
+		background: #e2e8f0;
+		border-radius: 14px;
+		padding: 0.2rem;
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+	}
+
+	.tabs button {
+		border: none;
+		background: transparent;
+		padding: 0.7rem 1.2rem;
+		border-radius: 12px;
+		cursor: pointer;
+		font-weight: 700;
+		color: #0f172a;
+	}
+
+	.tabs button.active {
+		background: #fff;
+		box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+	}
+
+	.add {
+		padding: 0.65rem 1.15rem;
+		border-radius: 12px;
+		box-shadow: 0 12px 30px rgba(37, 99, 235, 0.25);
+		font-weight: 700;
 	}
 
 	.column {
@@ -430,59 +462,24 @@ async function saveWish() {
 		gap: 1rem;
 	}
 
-	.topbar {
-		display: flex;
-		align-items: center;
-		justify-content: space-between;
-		gap: 1rem;
-	}
-
-	.tabs {
-		display: inline-flex;
-		background: #e2e8f0;
-		border-radius: 12px;
-		padding: 0.15rem;
-	}
-
-	.tabs button {
-		border: none;
-		background: transparent;
-		padding: 0.6rem 1rem;
-		border-radius: 10px;
-		cursor: pointer;
-		font-weight: 700;
-		color: #0f172a;
-	}
-
-	.tabs button.active {
-		background: #fff;
-		box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
-	}
-
-	.add {
-		padding-inline: 1.1rem;
-	}
-
 	.home-meta {
 		display: flex;
 		flex-direction: column;
-		gap: 0.2rem;
+		gap: 0.35rem;
 		background: #fff;
-		padding: 1rem 1.25rem;
-		border-radius: 14px;
-		box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+		padding: 1.2rem 1.35rem;
+		border-radius: 16px;
+		box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
 		border: 1px solid #e2e8f0;
-	}
-
-	@media (max-width: 900px) {
-		.board {
-			grid-template-columns: 1fr;
-		}
 	}
 
 	@media (max-width: 640px) {
 		section.page {
-			padding: 1.25rem 1rem 2rem;
+			padding: 1.5rem 1rem 2rem;
+		}
+
+		.topbar {
+			padding: 1.25rem;
 		}
 	}
 </style>
