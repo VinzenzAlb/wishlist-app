@@ -103,13 +103,6 @@
 					</div>
 				{/if}
 
-				{#if $error}
-					<p class="message message--error">{$error}</p>
-				{/if}
-				{#if $info}
-					<p class="message message--info">{$info}</p>
-				{/if}
-
 				<section class="board">
 					<WishList
 						wishes={$wishes}
