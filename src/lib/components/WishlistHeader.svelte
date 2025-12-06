@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { SortMode, User } from '$lib/types';
+	import Icon from './Icon.svelte';
 
 	let {
 		identityUserName,
@@ -28,7 +29,10 @@
 			<p class="muted text-sm">You are</p>
 			<h2>{identityUserName}</h2>
 		</div>
-		<button class="btn btn--ghost" onclick={onReset}>Change user</button>
+		<button class="btn btn--ghost" onclick={onReset} aria-label="Log out" title="Log out">
+			<Icon name="logout" size={18} />
+			<span>Log out</span>
+		</button>
 	</div>
 	<div class="select-row">
 		<label class="form-field">

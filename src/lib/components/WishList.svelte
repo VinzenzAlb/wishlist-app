@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { priorityStars } from '$lib/services/wishlistService';
 	import type { Purchased, Wish } from '$lib/types';
+	import Icon from './Icon.svelte';
 
 let {
 			wishes,
@@ -40,7 +41,10 @@ let {
 			{/if}
 		</div>
 		{#if isOwnerView && onAdd}
-			<button class="btn btn--primary" onclick={onAdd}>+ Add wish</button>
+			<button class="btn btn--primary btn-icon" onclick={onAdd} aria-label="Add wish" title="Add wish">
+				<Icon name="plus" size={18} />
+				<span class="sr-only">Add wish</span>
+			</button>
 		{/if}
 	</div>
 
@@ -61,12 +65,28 @@ let {
 						</div>
 						<div class="wish-actions">
 							{#if canEdit}
-								<button class="btn btn--ghost" onclick={() => onEdit(wish)}>Edit</button>
-								<button class="btn btn--danger" onclick={() => onDelete(wish.id)}>Delete</button>
+								<button
+									class="btn btn--ghost btn-icon"
+									onclick={() => onEdit(wish)}
+									aria-label={`Edit ${wish.title}`}
+									title={`Edit ${wish.title}`}
+								>
+									<Icon name="edit" size={18} />
+									<span class="sr-only">Edit {wish.title}</span>
+								</button>
+								<button
+									class="btn btn--danger btn-icon"
+									onclick={() => onDelete(wish.id)}
+									aria-label={`Delete ${wish.title}`}
+									title={`Delete ${wish.title}`}
+								>
+									<Icon name="trash" size={18} />
+									<span class="sr-only">Delete {wish.title}</span>
+								</button>
 							{:else if !isOwnerView}
 								{#if purchase}
 									<button class="btn" onclick={() => onTogglePurchased(wish.id)} disabled={purchase.user_id !== identityUserId}>
-										{purchase.user_id === identityUserId ? 'Unmark' : 'Purchased'}
+										{purchase.user_id === identityUserId ? 'Unmark' : 'Purchased by someone else'}
 									</button>
 								{:else}
 									<button class="btn btn--primary" onclick={() => onTogglePurchased(wish.id)}>Mark purchased</button>
@@ -75,7 +95,7 @@ let {
 						</div>
 					</div>
 					{#if !isOwnerView && purchase}
-						<p class="pill">Purchased</p>
+						<p class="pill">{purchase.user_id === identityUserId ? 'Purchased by you' : 'Purchased'}</p>
 					{/if}
 				</li>
 			{/each}

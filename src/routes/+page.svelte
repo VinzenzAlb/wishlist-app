@@ -1,4 +1,5 @@
 <script lang="ts">
+	import Icon from '$lib/components/Icon.svelte';
 	import Modal from '$lib/components/Modal.svelte';
 	import ThemeToggle from '$lib/components/ThemeToggle.svelte';
 	import UserGate from '$lib/components/UserGate.svelte';
@@ -88,8 +89,11 @@
 								<p class="muted text-sm">You are</p>
 								<h2>{$identityUserName}</h2>
 							</div>
-							<button class="btn btn--ghost" onclick={resetSelection}>Change user</button>
-						</div>
+								<button class="btn btn--ghost" onclick={resetSelection} aria-label="Log out" title="Log out">
+									<Icon name="logout" size={18} />
+									<span>Log out</span>
+								</button>
+							</div>
 						<p class="muted">Manage your wishlist here. Others can see it from Friends.</p>
 					</div>
 				{/if}

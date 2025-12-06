@@ -68,6 +68,18 @@ button {
 	font-size: 0.9rem;
 }
 
+.sr-only {
+	position: absolute;
+	width: 1px;
+	height: 1px;
+	padding: 0;
+	margin: -1px;
+	overflow: hidden;
+	clip: rect(0, 0, 0, 0);
+	border: 0;
+	white-space: nowrap;
+}
+
 .card {
 	background: var(--color-surface);
 	border-radius: var(--radius-lg);
@@ -112,6 +124,18 @@ button {
 	color: var(--color-text);
 	transition: transform 120ms ease, box-shadow 120ms ease, background var(--transition), border-color var(--transition);
 	text-decoration: none;
+}
+
+.btn-icon {
+	width: 2.6rem;
+	height: 2.6rem;
+	padding: 0;
+	border-radius: 999px;
+}
+
+.btn-icon svg {
+	width: 1.2rem;
+	height: 1.2rem;
 }
 
 .btn:hover {
