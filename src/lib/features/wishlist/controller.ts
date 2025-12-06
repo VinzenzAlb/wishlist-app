@@ -4,6 +4,29 @@ import type { Purchased, SortMode, User, Wish, WishInput } from '$lib/types';
 import { derived, get, writable } from 'svelte/store';
 
 const INITIAL_FORM: WishInput = { title: '', link: '', priority: 2 };
+const IDENTITY_COOKIE_NAME = 'wishlist-identity';
+const IDENTITY_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
+
+function readIdentityCookie() {
+	if (typeof document === 'undefined') return null;
+	const target = document.cookie
+		.split(';')
+		.map((entry) => entry.trim())
+		.find((entry) => entry.startsWith(`${IDENTITY_COOKIE_NAME}=`));
+	if (!target) return null;
+	const value = target.substring(IDENTITY_COOKIE_NAME.length + 1);
+	return value ? decodeURIComponent(value) : null;
+}
+
+function writeIdentityCookie(id: string) {
+	if (typeof document === 'undefined') return;
+	document.cookie = `${IDENTITY_COOKIE_NAME}=${encodeURIComponent(id)}; Max-Age=${IDENTITY_COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+}
+
+function clearIdentityCookie() {
+	if (typeof document === 'undefined') return;
+	document.cookie = `${IDENTITY_COOKIE_NAME}=; Max-Age=0; Path=/; SameSite=Lax`;
+}
 
 export function createWishlistController() {
 	const users = writable<User[]>([]);
@@ -35,6 +58,14 @@ export function createWishlistController() {
 	const viewingUserName = derived([users, viewingUserId], ([$users, $viewing]) => findUserName($users, $viewing));
 	const identityUserName = derived([users, identityUserId], ([$users, $identity]) => findUserName($users, $identity));
 	const friendOptions = derived([users, identityUserId], ([$users, $identity]) => $users.filter((u) => u.id !== $identity));
+
+	const storedIdentity = readIdentityCookie();
+	if (storedIdentity) {
+		identityUserId.set(storedIdentity);
+		viewingUserId.set(storedIdentity);
+		pendingUserId.set(storedIdentity);
+		void loadDataFor(storedIdentity);
+	}
 
 	function findUserName(list: User[], id: string) {
 		return id ? list.find((u) => u.id === id)?.name ?? 'Unknown' : 'Unknown';
@@ -156,6 +187,7 @@ export function createWishlistController() {
 		identityUserId.set(pending);
 		viewingUserId.set(pending);
 		activeView.set('home');
+		writeIdentityCookie(pending);
 		await loadDataFor(pending);
 	}
 
@@ -322,6 +354,7 @@ export function createWishlistController() {
 		showModal.set(false);
 		error.set(null);
 		info.set(null);
+		clearIdentityCookie();
 	}
 
 	return {
