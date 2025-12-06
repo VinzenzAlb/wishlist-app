@@ -9,7 +9,7 @@
 		{
 			id: 'christmas',
 			name: 'Weihnachten',
-			description: 'Standard. Gemütliche Rot- und Grüntöne.'
+			description: 'Standard. Tiefe Grün- und Goldtöne.'
 		},
 		{ id: 'light', name: 'Hell', description: 'Klar mit sanften Blautönen.' },
 		{ id: 'dark', name: 'Dunkel', description: 'Dunkel mit Neon-Akzenten.' }
@@ -179,7 +179,7 @@
 	}
 
 	.swatch--christmas {
-		background: linear-gradient(135deg, #d7263d, #ff8c69 45%, #1c8b5f);
+		background: linear-gradient(135deg, #0f8a5c, #2fb679 50%, #f1c27d);
 	}
 
 	.swatch--light {

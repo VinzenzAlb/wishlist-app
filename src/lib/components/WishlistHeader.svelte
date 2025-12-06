@@ -1,23 +1,19 @@
 <script lang="ts">
-	import type { SortMode, User } from '$lib/types';
+	import type { User } from '$lib/types';
 	import Icon from './Icon.svelte';
 
 	let {
-		identityUserName,
-		viewingUserId,
-		viewingUserName,
-		users,
-		sortMode,
-		onChangeSort,
-		onChangeView,
-		onReset
+	identityUserName,
+	viewingUserId,
+	viewingUserName,
+	users,
+	onChangeView,
+	onReset
 	} = $props<{
 		identityUserName: string;
 		viewingUserId: string;
 		viewingUserName: string;
 		users: User[];
-		sortMode: SortMode;
-		onChangeSort: (mode: SortMode) => void;
 		onChangeView: (id: string) => void;
 		onReset: () => void;
 	}>();
@@ -45,18 +41,6 @@
 				{#each users as user}
 					<option value={user.id}>{user.name}</option>
 				{/each}
-			</select>
-		</label>
-		<label class="form-field">
-			<span>Sortieren nach</span>
-			<select
-				class="input"
-				value={sortMode}
-				onchange={(e) => onChangeSort((e.target as HTMLSelectElement).value as SortMode)}
-			>
-				<option value="priority">Priorität</option>
-				<option value="created_at">Erstellungsdatum</option>
-				<option value="title">Alphabetisch</option>
 			</select>
 		</label>
 	</div>

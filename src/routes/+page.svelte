@@ -17,6 +17,7 @@
 			identityUserId,
 			viewingUserId,
 			pendingUserId,
+			wishes,
 			purchased,
 			sortMode,
 			activeView,
@@ -29,7 +30,7 @@
 			showModal,
 			saving
 		},
-		derived: { sortedWishes, canEdit, isOwnerView, viewingUserName, identityUserName, friendOptions },
+		derived: { canEdit, isOwnerView, viewingUserName, identityUserName, friendOptions },
 		actions: {
 			loadUsers,
 			handleContinue,
@@ -77,8 +78,6 @@
 						viewingUserId={$viewingUserId}
 						viewingUserName={$viewingUserName}
 						users={$friendOptions}
-						sortMode={$sortMode}
-						onChangeSort={(mode) => sortMode.set(mode)}
 						onChangeView={handleViewChange}
 						onReset={resetSelection}
 					/>
@@ -106,19 +105,21 @@
 				{/if}
 
 				<section class="board">
-						<WishList
-							wishes={$sortedWishes}
-							purchased={$purchased}
-							isOwnerView={$isOwnerView}
-							canEdit={$canEdit}
-							viewingUserName={$viewingUserName}
-							identityUserId={$identityUserId}
-							loading={$loadingWishes}
-							onEdit={startEdit}
-							onDelete={deleteWish}
-							onTogglePurchased={togglePurchased}
-							onAdd={startAdd}
-						/>
+					<WishList
+						wishes={$wishes}
+						purchased={$purchased}
+						isOwnerView={$isOwnerView}
+						canEdit={$canEdit}
+						viewingUserName={$viewingUserName}
+						identityUserId={$identityUserId}
+						loading={$loadingWishes}
+						onEdit={startEdit}
+						onDelete={deleteWish}
+						onTogglePurchased={togglePurchased}
+						onAdd={startAdd}
+						sortMode={$sortMode}
+						onChangeSort={(mode) => sortMode.set(mode)}
+					/>
 				</section>
 			</section>
 		{/if}

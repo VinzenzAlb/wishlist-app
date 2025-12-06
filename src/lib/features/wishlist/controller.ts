@@ -1,4 +1,4 @@
-import { fetchPurchasesFor, fetchUsers, fetchWishes, insertPurchase, insertWish, removePurchase, removeWish, sortWishes, updateWish } from '$lib/services/wishlistService';
+import { fetchPurchasesFor, fetchUsers, fetchWishes, insertPurchase, insertWish, removePurchase, removeWish, updateWish } from '$lib/services/wishlistService';
 import { supabase } from '$lib/supabaseClient';
 import type { Purchased, SortMode, User, Wish, WishInput } from '$lib/types';
 import { derived, get, writable } from 'svelte/store';
@@ -98,7 +98,6 @@ export function createWishlistController() {
 
 	let filterPrefs: FilterCookieValue = readFilterCookie() ?? {};
 
-	const sortedWishes = derived([wishes, sortMode], ([$wishes, $sortMode]) => sortWishes($wishes, $sortMode));
 	const canEdit = derived([viewingUserId, identityUserId], ([$viewing, $identity]) => Boolean($viewing && $viewing === $identity));
 	const isOwnerView = canEdit;
 	const viewingUserName = derived([users, viewingUserId], ([$users, $viewing]) => findUserName($users, $viewing));
@@ -449,7 +448,6 @@ export function createWishlistController() {
 			saving
 		},
 		derived: {
-			sortedWishes,
 			canEdit,
 			isOwnerView,
 			viewingUserName,

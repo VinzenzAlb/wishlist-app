@@ -15,7 +15,7 @@
 <div class="form">
 	<label class="form-field">
 		<span>Titel *</span>
-		<input class="input" placeholder="Reise nach Japan" value={form.title} oninput={(e) => updateField('title', (e.target as HTMLInputElement).value)} />
+		<input class="input" placeholder="Bilderrahmen" value={form.title} oninput={(e) => updateField('title', (e.target as HTMLInputElement).value)} />
 	</label>
 	<label class="form-field">
 		<span>Link</span>

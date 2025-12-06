@@ -1,36 +1,52 @@
 <script lang="ts">
-	import { priorityStars } from '$lib/services/wishlistService';
-	import type { Purchased, Wish } from '$lib/types';
+	import { priorityStars, sortWishes } from '$lib/services/wishlistService';
+	import type { Purchased, SortMode, Wish } from '$lib/types';
 	import Icon from './Icon.svelte';
 
 let {
-			wishes,
-			purchased,
-			isOwnerView,
-			canEdit,
-			viewingUserName,
-			identityUserId,
-			loading,
-			onEdit,
-			onDelete,
-			onTogglePurchased,
-			onAdd
-		} = $props<{
-			wishes: Wish[];
-			purchased: Purchased[];
-			isOwnerView: boolean;
-			canEdit: boolean;
-			viewingUserName: string;
-			identityUserId: string;
-			loading: boolean;
-			onEdit: (wish: Wish) => void;
-			onDelete: (wishId: string) => void;
-			onTogglePurchased: (wishId: string) => void;
-			onAdd?: () => void;
-		}>();
+		wishes,
+		purchased,
+		isOwnerView,
+		canEdit,
+		viewingUserName,
+		identityUserId,
+		loading,
+		onEdit,
+		onDelete,
+		onTogglePurchased,
+		onAdd,
+		sortMode,
+		onChangeSort
+	} = $props<{
+		wishes: Wish[];
+		purchased: Purchased[];
+		isOwnerView: boolean;
+		canEdit: boolean;
+		viewingUserName: string;
+		identityUserId: string;
+		loading: boolean;
+		onEdit: (wish: Wish) => void;
+		onDelete: (wishId: string) => void;
+		onTogglePurchased: (wishId: string) => void;
+		onAdd?: () => void;
+		sortMode: SortMode;
+		onChangeSort: (mode: SortMode) => void;
+	}>();
+
+	let showOnlyAvailable = $state(false);
 
 	const purchaseFor = (wishId: string) => purchased.find((p: Purchased) => p.wish_id === wishId);
+	const orderedWishes = $derived(() => sortWishes(wishes, sortMode));
+	const visibleWishes = $derived(() => {
+		const list = orderedWishes();
+		if (isOwnerView || !showOnlyAvailable) {
+			return list;
+		}
+		return list.filter((wish) => !purchaseFor(wish.id));
+	});
 </script>
+
+
 
 <div class="card wish-card">
 	<div class="card-header">
@@ -40,19 +56,49 @@ let {
 				<span class="muted text-sm">Wird geladen…</span>
 			{/if}
 		</div>
-		{#if isOwnerView && onAdd}
-			<button class="btn btn--primary btn-icon" onclick={onAdd} aria-label="Wunsch hinzufügen" title="Wunsch hinzufügen">
-				<Icon name="plus" size={18} />
-				<span class="sr-only">Wunsch hinzufügen</span>
-			</button>
-		{/if}
+		<div class="card-controls">
+			{#if !isOwnerView}
+				<label class="sort-control">
+					<span>Verfügbarkeit</span>
+					<select
+						class="input sort-select"
+						value={showOnlyAvailable ? 'available' : 'all'}
+						onchange={(e) => {
+							const value = (e.target as HTMLSelectElement).value;
+							showOnlyAvailable = value === 'available';
+						}}
+					>
+						<option value="all">Alle Wünsche</option>
+						<option value="available">Nur verfügbare</option>
+					</select>
+				</label>
+			{/if}
+			<label class="sort-control">
+				<span>Sortieren nach</span>
+				<select
+					class="input sort-select"
+					value={sortMode}
+					onchange={(e) => onChangeSort((e.target as HTMLSelectElement).value as SortMode)}
+				>
+					<option value="priority">Priorität</option>
+					<option value="created_at">Erstellungsdatum</option>
+					<option value="title">Alphabetisch</option>
+				</select>
+			</label>
+			{#if isOwnerView && onAdd}
+				<button class="btn btn--primary btn-icon" onclick={onAdd} aria-label="Wunsch hinzufügen" title="Wunsch hinzufügen">
+					<Icon name="plus" size={18} />
+					<span class="sr-only">Wunsch hinzufügen</span>
+				</button>
+			{/if}
+		</div>
 	</div>
 
-	{#if !wishes.length && !loading}
-		<p class="muted">Noch keine Wünsche.</p>
+	{#if !visibleWishes().length && !loading}
+		<p class="muted">{showOnlyAvailable && !isOwnerView ? 'Gerade nichts verfügbar.' : 'Noch keine Wünsche.'}</p>
 	{:else}
 		<ul class="wish-list">
-			{#each wishes as wish}
+			{#each visibleWishes() as wish}
 				{@const purchase = purchaseFor(wish.id)}
 				<li class="wish">
 					<div class="wish-main">
@@ -110,6 +156,27 @@ let {
 		justify-content: space-between;
 		gap: 0.75rem;
 	}
+
+	.card-controls {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: flex-end;
+		justify-content: flex-end;
+		gap: 0.6rem;
+	}
+
+	.sort-control {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		font-size: 0.85rem;
+		text-align: right;
+	}
+
+	.sort-select {
+		min-width: 150px;
+	}
+
 
 	.card-heading {
 		display: flex;
