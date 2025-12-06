@@ -16,7 +16,9 @@ let {
 		onTogglePurchased,
 		onAdd,
 		sortMode,
-		onChangeSort
+		onChangeSort,
+		showOnlyAvailable,
+		onChangeAvailability
 	} = $props<{
 		wishes: Wish[];
 		purchased: Purchased[];
@@ -31,9 +33,9 @@ let {
 		onAdd?: () => void;
 		sortMode: SortMode;
 		onChangeSort: (mode: SortMode) => void;
+		showOnlyAvailable: boolean;
+		onChangeAvailability: (availableOnly: boolean) => void;
 	}>();
-
-	let showOnlyAvailable = $state(false);
 
 	const purchaseFor = (wishId: string) => purchased.find((p: Purchased) => p.wish_id === wishId);
 	const orderedWishes = $derived(() => sortWishes(wishes, sortMode));
@@ -43,6 +45,13 @@ let {
 			return list;
 		}
 		return list.filter((wish) => !purchaseFor(wish.id));
+	});
+	const placeholderItems = $derived(() => {
+		const visibleCount = visibleWishes().length;
+		const fallbackCount = orderedWishes().length;
+		const base = visibleCount || fallbackCount || 0;
+		const normalized = Math.max(3, Math.min(base || 3, 6));
+		return Array.from({ length: normalized });
 	});
 </script>
 
@@ -65,7 +74,7 @@ let {
 						value={showOnlyAvailable ? 'available' : 'all'}
 						onchange={(e) => {
 							const value = (e.target as HTMLSelectElement).value;
-							showOnlyAvailable = value === 'available';
+							onChangeAvailability(value === 'available');
 						}}
 					>
 						<option value="all">Alle Wünsche</option>
@@ -97,55 +106,78 @@ let {
 	{#if !visibleWishes().length && !loading}
 		<p class="muted">{showOnlyAvailable && !isOwnerView ? 'Gerade nichts verfügbar.' : 'Noch keine Wünsche.'}</p>
 	{:else}
-		<ul class="wish-list">
-			{#each visibleWishes() as wish}
-				{@const purchase = purchaseFor(wish.id)}
-				<li class="wish">
-					<div class="wish-main">
-						<div>
-							<p class="wish-title">{wish.title}</p>
-							{#if wish.link}
-								<a class="muted text-sm" href={wish.link} target="_blank" rel="noreferrer">Link öffnen</a>
-							{/if}
-							<p class="muted text-sm">Priorität: {priorityStars(wish.priority)}</p>
+		{#if loading}
+			<ul class="wish-list wish-list--placeholder" aria-live="polite">
+				{#each placeholderItems() as _, index (index)}
+					{@const primaryWidth = 60 + ((index % 3) * 10)}
+					{@const secondaryWidth = 40 + (((index + 1) % 3) * 15)}
+					<li class="wish wish--placeholder">
+						<div class="wish-main">
+							<div class="wish-placeholder-text">
+								<div class="skeleton skeleton-title" style={`width: ${primaryWidth}%`}></div>
+								<div class="skeleton skeleton-line" style={`width: ${secondaryWidth}%`}></div>
+								<div class="skeleton skeleton-line skeleton-line--short"></div>
+							</div>
+							<div class="wish-placeholder-actions">
+								<div class="skeleton skeleton-button"></div>
+								<div class="skeleton skeleton-button skeleton-button--ghost"></div>
+							</div>
 						</div>
-						<div class="wish-actions">
-							{#if canEdit}
-								<button
-									class="btn btn--ghost btn-icon"
-									onclick={() => onEdit(wish)}
-									aria-label={`Wunsch "${wish.title}" bearbeiten`}
-									title={`Wunsch "${wish.title}" bearbeiten`}
-								>
-									<Icon name="edit" size={18} />
-									<span class="sr-only">Wunsch "{wish.title}" bearbeiten</span>
-								</button>
-								<button
-									class="btn btn--danger btn-icon"
-									onclick={() => onDelete(wish.id)}
-									aria-label={`Wunsch "${wish.title}" löschen`}
-									title={`Wunsch "${wish.title}" löschen`}
-								>
-									<Icon name="trash" size={18} />
-									<span class="sr-only">Wunsch "{wish.title}" löschen</span>
-								</button>
-							{:else if !isOwnerView}
-								{#if purchase}
-									<button class="btn" onclick={() => onTogglePurchased(wish.id)} disabled={purchase.user_id !== identityUserId}>
-										{purchase.user_id === identityUserId ? 'Markierung entfernen' : 'Schon von jemand anderem reserviert'}
-									</button>
-								{:else}
-									<button class="btn btn--primary" onclick={() => onTogglePurchased(wish.id)}>Als gekauft markieren</button>
+						<div class="skeleton skeleton-pill"></div>
+					</li>
+				{/each}
+			</ul>
+		{:else}
+			<ul class="wish-list">
+				{#each visibleWishes() as wish}
+					{@const purchase = purchaseFor(wish.id)}
+					<li class="wish">
+						<div class="wish-main">
+							<div>
+								<p class="wish-title">{wish.title}</p>
+								{#if wish.link}
+									<a class="muted text-sm" href={wish.link} target="_blank" rel="noreferrer">Link öffnen</a>
 								{/if}
-							{/if}
+								<p class="muted text-sm">Priorität: {priorityStars(wish.priority)}</p>
+							</div>
+							<div class="wish-actions">
+								{#if canEdit}
+									<button
+										class="btn btn--ghost btn-icon"
+										onclick={() => onEdit(wish)}
+										aria-label={`Wunsch "${wish.title}" bearbeiten`}
+										title={`Wunsch "${wish.title}" bearbeiten`}
+									>
+										<Icon name="edit" size={18} />
+										<span class="sr-only">Wunsch "{wish.title}" bearbeiten</span>
+									</button>
+									<button
+										class="btn btn--danger btn-icon"
+										onclick={() => onDelete(wish.id)}
+										aria-label={`Wunsch "${wish.title}" löschen`}
+										title={`Wunsch "${wish.title}" löschen`}
+									>
+										<Icon name="trash" size={18} />
+										<span class="sr-only">Wunsch "{wish.title}" löschen</span>
+									</button>
+								{:else if !isOwnerView}
+									{#if purchase}
+										<button class="btn" onclick={() => onTogglePurchased(wish.id)} disabled={purchase.user_id !== identityUserId}>
+											{purchase.user_id === identityUserId ? 'Markierung entfernen' : 'Schon von jemand anderem reserviert'}
+										</button>
+									{:else}
+										<button class="btn btn--primary" onclick={() => onTogglePurchased(wish.id)}>Als gekauft markieren</button>
+									{/if}
+								{/if}
+							</div>
 						</div>
-					</div>
-					{#if !isOwnerView && purchase}
-						<p class="pill">{purchase.user_id === identityUserId ? 'Von dir gekauft' : 'Gekauft'}</p>
-					{/if}
-				</li>
-			{/each}
-		</ul>
+						{#if !isOwnerView && purchase}
+							<p class="pill">{purchase.user_id === identityUserId ? 'Von dir gekauft' : 'Gekauft'}</p>
+						{/if}
+					</li>
+				{/each}
+			</ul>
+		{/if}
 	{/if}
 </div>
 
@@ -226,5 +258,81 @@ let {
 		gap: 0.5rem;
 		flex-wrap: wrap;
 		justify-content: flex-end;
+	}
+
+	.wish-list--placeholder {
+		animation: fadeIn 150ms ease;
+	}
+
+	.wish--placeholder {
+		border-color: transparent;
+		background: var(--color-surface);
+		box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
+	}
+
+	.wish-placeholder-text {
+		display: flex;
+		flex-direction: column;
+		gap: 0.4rem;
+		width: 100%;
+	}
+
+	.wish-placeholder-actions {
+		display: flex;
+		gap: 0.4rem;
+		align-items: center;
+		justify-content: flex-end;
+		flex-wrap: wrap;
+	}
+
+	.skeleton {
+		display: block;
+		height: 0.8rem;
+		border-radius: 999px;
+		background: linear-gradient(90deg, var(--color-border), var(--color-border-strong), var(--color-border));
+		background-size: 200% 100%;
+		animation: skeleton-slide 1.3s ease infinite;
+	}
+
+	.skeleton-title {
+		height: 1.1rem;
+	}
+
+	.skeleton-line--short {
+		width: 35%;
+	}
+
+	.skeleton-button {
+		width: 120px;
+		height: 2.4rem;
+		border-radius: var(--radius-md);
+	}
+
+	.skeleton-button--ghost {
+		width: 48px;
+	}
+
+	.skeleton-pill {
+		width: 130px;
+		height: 1.6rem;
+		border-radius: 999px;
+	}
+
+	@keyframes skeleton-slide {
+		0% {
+			background-position: 200% 0;
+		}
+		100% {
+			background-position: -200% 0;
+		}
+	}
+
+	@keyframes fadeIn {
+		from {
+			opacity: 0;
+		}
+		to {
+			opacity: 1;
+		}
 	}
 </style>

@@ -28,7 +28,8 @@
 			form,
 			editingWishId,
 			showModal,
-			saving
+			saving,
+			showOnlyAvailable
 		},
 		derived: { canEdit, isOwnerView, viewingUserName, identityUserName, friendOptions },
 		actions: {
@@ -119,6 +120,8 @@
 						onAdd={startAdd}
 						sortMode={$sortMode}
 						onChangeSort={(mode) => sortMode.set(mode)}
+						showOnlyAvailable={$showOnlyAvailable}
+						onChangeAvailability={(value) => showOnlyAvailable.set(value)}
 					/>
 				</section>
 			</section>

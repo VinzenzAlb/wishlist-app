@@ -11,6 +11,7 @@ const FILTER_COOKIE_NAME = 'wishlist-filters';
 type FilterCookieValue = {
 	sortMode?: SortMode;
 	friendViewId?: string;
+	showOnlyAvailable?: boolean;
 };
 
 function readIdentityCookie() {
@@ -56,6 +57,9 @@ function readFilterCookie(): FilterCookieValue | null {
 		if (typeof parsed.friendViewId === 'string') {
 			filters.friendViewId = parsed.friendViewId;
 		}
+		if (typeof parsed.showOnlyAvailable === 'boolean') {
+			filters.showOnlyAvailable = parsed.showOnlyAvailable;
+		}
 		return filters;
 	} catch {
 		return null;
@@ -82,6 +86,7 @@ export function createWishlistController() {
 	const purchased = writable<Purchased[]>([]);
 	const sortMode = writable<SortMode>('priority');
 	const activeView = writable<'home' | 'friends'>('home');
+	const showOnlyAvailable = writable(false);
 
 	const loadingUsers = writable(true);
 	const loadingWishes = writable(false);
@@ -109,6 +114,11 @@ export function createWishlistController() {
 	} else {
 		filterPrefs.sortMode = get(sortMode);
 	}
+	if (typeof filterPrefs.showOnlyAvailable === 'boolean') {
+		showOnlyAvailable.set(filterPrefs.showOnlyAvailable);
+	} else {
+		filterPrefs.showOnlyAvailable = get(showOnlyAvailable);
+	}
 
 	function persistFilterPrefs(update: Partial<FilterCookieValue>) {
 		filterPrefs = { ...filterPrefs, ...update };
@@ -117,6 +127,9 @@ export function createWishlistController() {
 
 	sortMode.subscribe((mode) => {
 		persistFilterPrefs({ sortMode: mode });
+	});
+	showOnlyAvailable.subscribe((value) => {
+		persistFilterPrefs({ showOnlyAvailable: value });
 	});
 
 	const storedIdentity = readIdentityCookie();
@@ -438,6 +451,7 @@ export function createWishlistController() {
 			purchased,
 			sortMode,
 			activeView,
+			showOnlyAvailable,
 			loadingUsers,
 			loadingWishes,
 			error,
