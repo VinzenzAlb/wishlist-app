@@ -2,36 +2,45 @@
 	import { priorityStars } from '$lib/services/wishlistService';
 	import type { Purchased, Wish } from '$lib/types';
 
-	let {
-		wishes,
-		purchased,
-		isOwnerView,
-		canEdit,
-		identityUserId,
-		loading,
-		onEdit,
-		onDelete,
-		onTogglePurchased
-	} = $props<{
-		wishes: Wish[];
-		purchased: Purchased[];
-		isOwnerView: boolean;
-		canEdit: boolean;
-		identityUserId: string;
-		loading: boolean;
-		onEdit: (wish: Wish) => void;
-		onDelete: (wishId: string) => void;
-		onTogglePurchased: (wishId: string) => void;
-	}>();
+let {
+			wishes,
+			purchased,
+			isOwnerView,
+			canEdit,
+			viewingUserName,
+			identityUserId,
+			loading,
+			onEdit,
+			onDelete,
+			onTogglePurchased,
+			onAdd
+		} = $props<{
+			wishes: Wish[];
+			purchased: Purchased[];
+			isOwnerView: boolean;
+			canEdit: boolean;
+			viewingUserName: string;
+			identityUserId: string;
+			loading: boolean;
+			onEdit: (wish: Wish) => void;
+			onDelete: (wishId: string) => void;
+			onTogglePurchased: (wishId: string) => void;
+			onAdd?: () => void;
+		}>();
 
 	const purchaseFor = (wishId: string) => purchased.find((p: Purchased) => p.wish_id === wishId);
 </script>
 
 <div class="card wish-card">
 	<div class="card-header">
-		<h3>Wishlist</h3>
-		{#if loading}
-			<span class="muted text-sm">Loading…</span>
+		<div class="card-heading">
+			<h3>{isOwnerView ? 'My wishlist' : viewingUserName ? `${viewingUserName}'s wishlist` : 'Wishlist'}</h3>
+			{#if loading}
+				<span class="muted text-sm">Loading…</span>
+			{/if}
+		</div>
+		{#if isOwnerView && onAdd}
+			<button class="btn btn--primary" onclick={onAdd}>+ Add wish</button>
 		{/if}
 	</div>
 
@@ -77,9 +86,16 @@
 <style>
 	.card-header {
 		display: flex;
-		align-items: baseline;
+		align-items: center;
 		justify-content: space-between;
+		gap: 0.75rem;
+	}
+
+	.card-heading {
+		display: flex;
+		align-items: baseline;
 		gap: 0.5rem;
+		flex-wrap: wrap;
 	}
 
 	.wish-list {

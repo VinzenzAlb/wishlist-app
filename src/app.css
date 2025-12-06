@@ -135,7 +135,6 @@ button {
 .btn--ghost {
 	background: transparent;
 	color: var(--color-primary);
-	padding-left: 0;
 }
 
 .btn--danger {

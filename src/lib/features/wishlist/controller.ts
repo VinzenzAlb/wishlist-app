@@ -6,6 +6,12 @@ import { derived, get, writable } from 'svelte/store';
 const INITIAL_FORM: WishInput = { title: '', link: '', priority: 2 };
 const IDENTITY_COOKIE_NAME = 'wishlist-identity';
 const IDENTITY_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
+const FILTER_COOKIE_NAME = 'wishlist-filters';
+
+type FilterCookieValue = {
+	sortMode?: SortMode;
+	friendViewId?: string;
+};
 
 function readIdentityCookie() {
 	if (typeof document === 'undefined') return null;
@@ -26,6 +32,44 @@ function writeIdentityCookie(id: string) {
 function clearIdentityCookie() {
 	if (typeof document === 'undefined') return;
 	document.cookie = `${IDENTITY_COOKIE_NAME}=; Max-Age=0; Path=/; SameSite=Lax`;
+}
+
+function isSortModeValue(value: unknown): value is SortMode {
+	return value === 'priority' || value === 'created_at' || value === 'title';
+}
+
+function readFilterCookie(): FilterCookieValue | null {
+	if (typeof document === 'undefined') return null;
+	const target = document.cookie
+		.split(';')
+		.map((entry) => entry.trim())
+		.find((entry) => entry.startsWith(`${FILTER_COOKIE_NAME}=`));
+	if (!target) return null;
+	const raw = target.substring(FILTER_COOKIE_NAME.length + 1);
+	if (!raw) return null;
+	try {
+		const parsed = JSON.parse(decodeURIComponent(raw)) as Record<string, unknown>;
+		const filters: FilterCookieValue = {};
+		if (isSortModeValue(parsed.sortMode)) {
+			filters.sortMode = parsed.sortMode;
+		}
+		if (typeof parsed.friendViewId === 'string') {
+			filters.friendViewId = parsed.friendViewId;
+		}
+		return filters;
+	} catch {
+		return null;
+	}
+}
+
+function writeFilterCookie(filters: FilterCookieValue) {
+	if (typeof document === 'undefined') return;
+	document.cookie = `${FILTER_COOKIE_NAME}=${encodeURIComponent(JSON.stringify(filters))}; Max-Age=${IDENTITY_COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+}
+
+function clearFilterCookie() {
+	if (typeof document === 'undefined') return;
+	document.cookie = `${FILTER_COOKIE_NAME}=; Max-Age=0; Path=/; SameSite=Lax`;
 }
 
 export function createWishlistController() {
@@ -52,12 +96,29 @@ export function createWishlistController() {
 	let wishlistChannel: ReturnType<typeof supabase.channel> | null = null;
 	let purchasedChannel: ReturnType<typeof supabase.channel> | null = null;
 
+	let filterPrefs: FilterCookieValue = readFilterCookie() ?? {};
+
 	const sortedWishes = derived([wishes, sortMode], ([$wishes, $sortMode]) => sortWishes($wishes, $sortMode));
 	const canEdit = derived([viewingUserId, identityUserId], ([$viewing, $identity]) => Boolean($viewing && $viewing === $identity));
 	const isOwnerView = canEdit;
 	const viewingUserName = derived([users, viewingUserId], ([$users, $viewing]) => findUserName($users, $viewing));
 	const identityUserName = derived([users, identityUserId], ([$users, $identity]) => findUserName($users, $identity));
 	const friendOptions = derived([users, identityUserId], ([$users, $identity]) => $users.filter((u) => u.id !== $identity));
+
+	if (filterPrefs.sortMode) {
+		sortMode.set(filterPrefs.sortMode);
+	} else {
+		filterPrefs.sortMode = get(sortMode);
+	}
+
+	function persistFilterPrefs(update: Partial<FilterCookieValue>) {
+		filterPrefs = { ...filterPrefs, ...update };
+		writeFilterCookie(filterPrefs);
+	}
+
+	sortMode.subscribe((mode) => {
+		persistFilterPrefs({ sortMode: mode });
+	});
 
 	const storedIdentity = readIdentityCookie();
 	if (storedIdentity) {
@@ -193,6 +254,7 @@ export function createWishlistController() {
 
 	async function handleViewChange(newUserId: string) {
 		viewingUserId.set(newUserId);
+		persistFilterPrefs({ friendViewId: newUserId });
 		unsubscribeRealtime();
 		await loadDataFor(newUserId);
 	}
@@ -333,11 +395,19 @@ export function createWishlistController() {
 			return;
 		}
 
+		const identity = get(identityUserId);
+		const hasOption = (id: string | null | undefined) => Boolean(id && options.some((o) => o.id === id));
 		let target = get(viewingUserId);
-		if (!target || target === get(identityUserId)) {
-			target = options[0].id;
+		if (!hasOption(target) || target === identity) {
+			const preferred = filterPrefs.friendViewId;
+			if (preferred && hasOption(preferred)) {
+				target = preferred;
+			} else {
+				target = options[0].id;
+			}
 			viewingUserId.set(target);
 		}
+		persistFilterPrefs({ friendViewId: target });
 		await loadDataFor(target);
 	}
 
@@ -355,6 +425,8 @@ export function createWishlistController() {
 		error.set(null);
 		info.set(null);
 		clearIdentityCookie();
+		filterPrefs = {};
+		clearFilterCookie();
 	}
 
 	return {

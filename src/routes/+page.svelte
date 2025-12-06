@@ -68,9 +68,6 @@
 						<button class="tab" class:active={$activeView === 'home'} onclick={goHome}>My list</button>
 						<button class="tab" class:active={$activeView === 'friends'} onclick={goFriends}>Friends</button>
 					</div>
-					{#if $activeView === 'home'}
-						<button class="btn btn--primary add" onclick={startAdd}>+ Add wish</button>
-					{/if}
 				</div>
 
 				{#if $activeView === 'friends'}
@@ -86,8 +83,13 @@
 					/>
 				{:else}
 					<div class="home-meta">
-						<p class="muted text-sm">You are</p>
-						<h2>{$identityUserName}</h2>
+						<div class="home-meta-header">
+							<div>
+								<p class="muted text-sm">You are</p>
+								<h2>{$identityUserName}</h2>
+							</div>
+							<button class="btn btn--ghost" onclick={resetSelection}>Change user</button>
+						</div>
 						<p class="muted">Manage your wishlist here. Others can see it from Friends.</p>
 					</div>
 				{/if}
@@ -100,17 +102,19 @@
 				{/if}
 
 				<section class="board">
-					<WishList
-						wishes={$sortedWishes}
-						purchased={$purchased}
-						isOwnerView={$isOwnerView}
-						canEdit={$canEdit}
-						identityUserId={$identityUserId}
-						loading={$loadingWishes}
-						onEdit={startEdit}
-						onDelete={deleteWish}
-						onTogglePurchased={togglePurchased}
-					/>
+						<WishList
+							wishes={$sortedWishes}
+							purchased={$purchased}
+							isOwnerView={$isOwnerView}
+							canEdit={$canEdit}
+							viewingUserName={$viewingUserName}
+							identityUserId={$identityUserId}
+							loading={$loadingWishes}
+							onEdit={startEdit}
+							onDelete={deleteWish}
+							onTogglePurchased={togglePurchased}
+							onAdd={startAdd}
+						/>
 				</section>
 			</section>
 		{/if}
@@ -186,21 +190,23 @@
 		box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
 	}
 
-	.add {
-		border-radius: 12px;
-		box-shadow: 0 12px 30px rgba(37, 99, 235, 0.25);
-		font-weight: 700;
-	}
-
 	.home-meta {
 		display: flex;
 		flex-direction: column;
-		gap: 0.35rem;
+		gap: 0.75rem;
 		background: var(--color-surface);
 		padding: 1.2rem 1.35rem;
 		border-radius: 16px;
 		box-shadow: var(--shadow-soft);
 		border: 1px solid var(--color-border);
+	}
+
+	.home-meta-header {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 0.75rem;
+		flex-wrap: wrap;
 	}
 
 	.board {

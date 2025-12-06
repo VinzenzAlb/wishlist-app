@@ -23,15 +23,21 @@
 </script>
 
 <header class="card header">
-	<div class="identity">
-		<p class="muted text-sm">You are</p>
-		<h2>{identityUserName}</h2>
+	<div class="header-wrapper">
+		<div class="identity">
+			<p class="muted text-sm">You are</p>
+			<h2>{identityUserName}</h2>
+		</div>
 		<button class="btn btn--ghost" onclick={onReset}>Change user</button>
 	</div>
 	<div class="select-row">
 		<label class="form-field">
 			<span>Viewing wishlist for</span>
-			<select class="input" value={viewingUserId} onchange={(e) => onChangeView((e.target as HTMLSelectElement).value)}>
+			<select
+				class="input"
+				value={viewingUserId}
+				onchange={(e) => onChangeView((e.target as HTMLSelectElement).value)}
+			>
 				{#each users as user}
 					<option value={user.id}>{user.name}</option>
 				{/each}
@@ -39,7 +45,11 @@
 		</label>
 		<label class="form-field">
 			<span>Sort by</span>
-			<select class="input" value={sortMode} onchange={(e) => onChangeSort((e.target as HTMLSelectElement).value as SortMode)}>
+			<select
+				class="input"
+				value={sortMode}
+				onchange={(e) => onChangeSort((e.target as HTMLSelectElement).value as SortMode)}
+			>
 				<option value="priority">Priority</option>
 				<option value="created_at">Date created</option>
 				<option value="title">Alphabetical</option>
@@ -52,7 +62,6 @@
 	header {
 		display: flex;
 		flex-wrap: wrap;
-		align-items: center;
 		gap: 1.25rem;
 		justify-content: space-between;
 		padding: 1.1rem 1.4rem;
@@ -72,5 +81,10 @@
 		display: flex;
 		flex-wrap: wrap;
 		gap: 1rem;
+	}
+
+	.header-wrapper {
+		display: flex;
+		justify-content: space-between;
 	}
 </style>
