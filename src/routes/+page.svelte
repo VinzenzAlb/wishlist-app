@@ -171,7 +171,7 @@
 		max-width: 1200px;
 		width: 100%;
 		margin: 0 auto;
-		padding: 2.5rem 1.5rem 3rem;
+		padding: 2.5rem 1.5rem 1.25rem;
 		display: flex;
 		flex-direction: column;
 		gap: 1.25rem;

@@ -190,7 +190,14 @@
 		background: radial-gradient(circle at 25% 25%, #22d3ee, #0f172a 55%);
 	}
 
+	.theme-toggle {
+		padding: 0 1.5rem;
+	}
+
 	@media (max-width: 640px) {
+		.theme-toggle {
+			padding: 0;
+		}
 		.theme-toggle__bar {
 			align-items: stretch;
 		}
