@@ -35,11 +35,12 @@
 
 <style>
 	section.gate {
-		min-height: calc(100vh - 120px);
+		flex: 1;
 		display: grid;
 		place-items: center;
 		padding: 1.5rem;
 		background: var(--bg-body);
+		width: 100%;
 	}
 
 	.gate-panel {

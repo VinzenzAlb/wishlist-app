@@ -57,73 +57,92 @@
 	$: if ($viewingUserId) setupRealtime($viewingUserId);
 </script>
 
-{#if !$identityUserId}
-	<UserGate users={$users} loading={$loadingUsers} pendingUserId={$pendingUserId} onSelect={(id) => pendingUserId.set(id)} onContinue={handleContinue} />
-{:else}
-	<section class="page">
-		<div class="topbar">
-			<div class="tabs">
-				<button class="tab" class:active={$activeView === 'home'} onclick={goHome}>My list</button>
-				<button class="tab" class:active={$activeView === 'friends'} onclick={goFriends}>Friends</button>
-			</div>
-			{#if $activeView === 'home'}
-				<button class="btn btn--primary add" onclick={startAdd}>+ Add wish</button>
-			{/if}
-		</div>
-
-		{#if $activeView === 'friends'}
-			<WishlistHeader
-				identityUserName={$identityUserName}
-				viewingUserId={$viewingUserId}
-				viewingUserName={$viewingUserName}
-				users={$friendOptions}
-				sortMode={$sortMode}
-				onChangeSort={(mode) => sortMode.set(mode)}
-				onChangeView={handleViewChange}
-				onReset={resetSelection}
-			/>
+<div class="page-shell">
+	<main class="page-main">
+		{#if !$identityUserId}
+			<UserGate users={$users} loading={$loadingUsers} pendingUserId={$pendingUserId} onSelect={(id) => pendingUserId.set(id)} onContinue={handleContinue} />
 		{:else}
-			<div class="home-meta">
-				<p class="muted text-sm">You are</p>
-				<h2>{$identityUserName}</h2>
-				<p class="muted">Manage your wishlist here. Others can see it from Friends.</p>
-			</div>
-		{/if}
+			<section class="page">
+				<div class="topbar">
+					<div class="tabs">
+						<button class="tab" class:active={$activeView === 'home'} onclick={goHome}>My list</button>
+						<button class="tab" class:active={$activeView === 'friends'} onclick={goFriends}>Friends</button>
+					</div>
+					{#if $activeView === 'home'}
+						<button class="btn btn--primary add" onclick={startAdd}>+ Add wish</button>
+					{/if}
+				</div>
 
-		{#if $error}
-			<p class="message message--error">{$error}</p>
-		{/if}
-		{#if $info}
-			<p class="message message--info">{$info}</p>
-		{/if}
+				{#if $activeView === 'friends'}
+					<WishlistHeader
+						identityUserName={$identityUserName}
+						viewingUserId={$viewingUserId}
+						viewingUserName={$viewingUserName}
+						users={$friendOptions}
+						sortMode={$sortMode}
+						onChangeSort={(mode) => sortMode.set(mode)}
+						onChangeView={handleViewChange}
+						onReset={resetSelection}
+					/>
+				{:else}
+					<div class="home-meta">
+						<p class="muted text-sm">You are</p>
+						<h2>{$identityUserName}</h2>
+						<p class="muted">Manage your wishlist here. Others can see it from Friends.</p>
+					</div>
+				{/if}
 
-		<section class="board">
-			<WishList
-				wishes={$sortedWishes}
-				purchased={$purchased}
-				isOwnerView={$isOwnerView}
-				canEdit={$canEdit}
-				identityUserId={$identityUserId}
-				loading={$loadingWishes}
-				onEdit={startEdit}
-				onDelete={deleteWish}
-				onTogglePurchased={togglePurchased}
-			/>
-		</section>
-	</section>
-{/if}
+				{#if $error}
+					<p class="message message--error">{$error}</p>
+				{/if}
+				{#if $info}
+					<p class="message message--info">{$info}</p>
+				{/if}
 
-<footer class="page-footer">
-	<ThemeToggle />
-</footer>
+				<section class="board">
+					<WishList
+						wishes={$sortedWishes}
+						purchased={$purchased}
+						isOwnerView={$isOwnerView}
+						canEdit={$canEdit}
+						identityUserId={$identityUserId}
+						loading={$loadingWishes}
+						onEdit={startEdit}
+						onDelete={deleteWish}
+						onTogglePurchased={togglePurchased}
+					/>
+				</section>
+			</section>
+		{/if}
+	</main>
+
+	<footer class="page-footer">
+		<ThemeToggle />
+	</footer>
+</div>
 
 <Modal open={$showModal} title={$editingWishId ? 'Edit wish' : 'Add wish'} onClose={() => showModal.set(false)}>
 	<WishForm form={$form} onSave={saveWish} onReset={() => (showModal.set(false), resetForm())} onChange={setForm} saving={$saving} />
 </Modal>
 
 <style>
+	.page-shell {
+		min-height: 100vh;
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+	}
+
+	.page-main {
+		flex: 1;
+		display: flex;
+		flex-direction: column;
+		width: 100%;
+	}
+
 	section.page {
 		max-width: 1200px;
+		width: 100%;
 		margin: 0 auto;
 		padding: 2.5rem 1.5rem 3rem;
 		display: flex;
@@ -189,9 +208,10 @@
 	}
 
 	.page-footer {
-		max-width: 1200px;
-		margin: 0 auto;
+		width: 100%;
 		padding: 0 1.5rem 2.5rem;
+		display: flex;
+		justify-content: center;
 	}
 
 	@media (max-width: 640px) {
