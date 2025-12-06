@@ -109,17 +109,28 @@ let {
 					<option value="title">Alphabetisch</option>
 				</select>
 			</label>
-			{#if isOwnerView && onAdd}
-				<button class="btn btn--primary btn-icon" onclick={onAdd} aria-label="Wunsch hinzufügen" title="Wunsch hinzufügen">
-					<Icon name="plus" size={18} />
-					<span class="sr-only">Wunsch hinzufügen</span>
-				</button>
-			{/if}
 		</div>
 	</div>
 
 	{#if !visibleWishes().length && !loading}
-		<p class="muted">{showOnlyAvailable && !isOwnerView ? 'Gerade nichts verfügbar.' : 'Noch keine Wünsche.'}</p>
+		{#if isOwnerView && onAdd}
+			<ul class="wish-list">
+				<li class="wish wish--add">
+					<button
+						type="button"
+						class="btn btn--primary wish-add-button"
+						onclick={onAdd}
+						aria-label="Wunsch hinzufügen"
+						title="Wunsch hinzufügen"
+					>
+						<Icon name="plus" size={18} />
+						<span>Wunsch hinzufügen</span>
+					</button>
+				</li>
+			</ul>
+		{:else}
+			<p class="muted">{showOnlyAvailable && !isOwnerView ? 'Gerade nichts verfügbar.' : 'Noch keine Wünsche.'}</p>
+		{/if}
 	{:else}
 		{#if loading}
 			<ul class="wish-list wish-list--placeholder" aria-live="polite">
@@ -144,6 +155,20 @@ let {
 			</ul>
 		{:else}
 			<ul class="wish-list">
+				{#if isOwnerView && onAdd}
+					<li class="wish wish--add">
+						<button
+							type="button"
+							class="btn btn--primary wish-add-button"
+							onclick={onAdd}
+							aria-label="Wunsch hinzufügen"
+							title="Wunsch hinzufügen"
+						>
+							<Icon name="plus" size={18} />
+							<span>Wunsch hinzufügen</span>
+						</button>
+					</li>
+				{/if}
 				{#each visibleWishes() as wish}
 					{@const purchase = purchaseFor(wish.id)}
 					{@const link = safeLink(wish.link)}
@@ -192,6 +217,20 @@ let {
 						{/if}
 					</li>
 				{/each}
+				{#if isOwnerView && onAdd && visibleWishes().length}
+					<li class="wish wish--add">
+						<button
+							type="button"
+							class="btn btn--primary wish-add-button"
+							onclick={onAdd}
+							aria-label="Weiteren Wunsch hinzufügen"
+							title="Weiteren Wunsch hinzufügen"
+						>
+							<Icon name="plus" size={18} />
+							<span>Weiteren Wunsch hinzufügen</span>
+						</button>
+					</li>
+				{/if}
 			</ul>
 		{/if}
 	{/if}
@@ -332,6 +371,16 @@ let {
 		width: 130px;
 		height: 1.6rem;
 		border-radius: 999px;
+	}
+
+	.wish--add {
+		background: transparent;
+		border-style: dashed;
+	}
+
+	.wish-add-button {
+		width: 100%;
+		justify-content: center;
 	}
 
 	@keyframes skeleton-slide {
