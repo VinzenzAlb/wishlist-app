@@ -1,20 +1,10 @@
 <script lang="ts">
-	import type { Wish } from '$lib/types';
-
-	let {
-		canEdit,
-		form,
-		editingWishId,
-		onSave,
-		onReset,
-		onChange
-	} = $props<{
-		canEdit: boolean;
+	let { form, onSave, onReset, onChange, saving } = $props<{
 		form: { title: string; link: string | null; priority: number };
-		editingWishId: string | null;
 		onSave: () => void;
 		onReset: () => void;
 		onChange: (form: { title: string; link: string | null; priority: number }) => void;
+		saving?: boolean;
 	}>();
 
 	function updateField(key: keyof typeof form, value: string | number) {
@@ -22,71 +12,38 @@
 	}
 </script>
 
-<div class="card">
-	<div class="card-header">
-		<h3>{editingWishId ? 'Edit wish' : 'Add a wish'}</h3>
-		{#if !canEdit}
-			<span class="muted small">Switch to this user to edit.</span>
-		{/if}
-	</div>
-	<div class="form">
-		<label>
-			<span>Title *</span>
-			<input placeholder="Trip to Japan" value={form.title} oninput={(e) => updateField('title', (e.target as HTMLInputElement).value)} />
-		</label>
-		<label>
-			<span>Link</span>
-			<input placeholder="https://example.com" value={form.link ?? ''} oninput={(e) => updateField('link', (e.target as HTMLInputElement).value)} />
-		</label>
-		<label>
-			<span>Priority</span>
-			<select value={form.priority} onchange={(e) => updateField('priority', Number((e.target as HTMLSelectElement).value))}>
-				<option value={1}>★</option>
-				<option value={2}>★★</option>
-				<option value={3}>★★★</option>
-			</select>
-		</label>
-		<div class="form-actions">
-			<button class="primary" onclick={onSave} disabled={!canEdit}>
-				{editingWishId ? 'Update wish' : 'Add wish'}
-			</button>
-			{#if editingWishId}
-				<button class="link" onclick={onReset}>Cancel</button>
-			{/if}
-		</div>
+<div class="form">
+	<label>
+		<span>Title *</span>
+		<input placeholder="Trip to Japan" value={form.title} oninput={(e) => updateField('title', (e.target as HTMLInputElement).value)} />
+	</label>
+	<label>
+		<span>Link</span>
+		<input placeholder="https://example.com" value={form.link ?? ''} oninput={(e) => updateField('link', (e.target as HTMLInputElement).value)} />
+	</label>
+	<label>
+		<span>Priority</span>
+		<select value={form.priority} onchange={(e) => updateField('priority', Number((e.target as HTMLSelectElement).value))}>
+			<option value={1}>★</option>
+			<option value={2}>★★</option>
+			<option value={3}>★★★</option>
+		</select>
+	</label>
+	<div class="form-actions">
+		<button class="primary" onclick={onSave} disabled={saving}>
+			{saving ? 'Saving…' : 'Save wish'}
+		</button>
+		<button class="link" onclick={onReset}>Cancel</button>
 	</div>
 </div>
 
 <style>
-	.muted {
-		color: #475569;
-	}
-
-	.small {
-		font-size: 0.9rem;
-	}
-
-	.card {
-		background: #fff;
-		border-radius: 14px;
-		padding: 1.25rem;
-		box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
-	}
-
-	.card-header {
-		display: flex;
-		align-items: baseline;
-		justify-content: space-between;
-		gap: 0.5rem;
-	}
-
+	/* container provided by parent */
 	.form {
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+		padding: 0.5rem 0;
 	}
 
 	label {

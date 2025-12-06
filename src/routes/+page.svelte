@@ -1,6 +1,7 @@
 <script lang="ts">
 	import UserGate from '$lib/components/UserGate.svelte';
 	import WishForm from '$lib/components/WishForm.svelte';
+	import Modal from '$lib/components/Modal.svelte';
 	import WishList from '$lib/components/WishList.svelte';
 	import WishlistHeader from '$lib/components/WishlistHeader.svelte';
 	import { supabase } from '$lib/supabaseClient';
@@ -28,6 +29,7 @@
 	let wishes: Wish[] = [];
 	let purchased: Purchased[] = [];
 	let sortMode: SortMode = 'priority';
+	let activeView: 'home' | 'friends' = 'home';
 
 	let loadingUsers = true;
 	let loadingWishes = false;
@@ -36,6 +38,8 @@
 
 	let form: WishInput = { title: '', link: '', priority: 2 };
 	let editingWishId: string | null = null;
+	let showModal = false;
+	let saving = false;
 
 	let wishlistChannel: ReturnType<typeof supabase.channel> | null = null;
 	let purchasedChannel: ReturnType<typeof supabase.channel> | null = null;
@@ -48,6 +52,7 @@
 	$: isOwnerView = canEdit;
 	$: viewingUserName = findUserName(viewingUserId);
 	$: identityUserName = findUserName(identityUserId);
+	$: friendOptions = users.filter((u) => u.id !== identityUserId);
 	$: if (viewingUserId) setupRealtime(viewingUserId);
 
 	const findUserName = (id: string) => (id ? users.find((u) => u.id === id)?.name ?? 'Unknown' : 'Unknown');
@@ -107,6 +112,7 @@
 		}
 		identityUserId = pendingUserId;
 		viewingUserId = pendingUserId;
+		activeView = 'home';
 		await loadDataFor(viewingUserId);
 	}
 
@@ -114,6 +120,27 @@
 		viewingUserId = newUserId;
 		unsubscribeRealtime();
 		await loadDataFor(newUserId);
+	}
+
+	function goHome() {
+		activeView = 'home';
+		viewingUserId = identityUserId;
+		if (identityUserId) {
+			loadDataFor(identityUserId);
+		}
+		showModal = false;
+	}
+
+	async function goFriends() {
+		activeView = 'friends';
+		if (!friendOptions.length) {
+			info = 'No friends added yet.';
+			return;
+		}
+		if (!viewingUserId || viewingUserId === identityUserId) {
+			viewingUserId = friendOptions[0].id;
+		}
+		await loadDataFor(viewingUserId);
 	}
 
 	function resetSelection() {
@@ -125,6 +152,8 @@
 		purchased = [];
 		form = { title: '', link: '', priority: 2 };
 		editingWishId = null;
+		activeView = 'home';
+		showModal = false;
 	}
 
 	function upsertWish(wish: Wish) {
@@ -181,38 +210,43 @@
 			.subscribe();
 	}
 
-	async function saveWish() {
-		error = null;
-		if (!viewingUserId || !identityUserId) return;
-		if (!form.title.trim()) {
-			error = 'Title is required.';
-			return;
-		}
+async function saveWish() {
+	error = null;
+	saving = true;
+	if (!viewingUserId || !identityUserId) return;
+	if (!form.title.trim()) {
+		error = 'Title is required.';
+		saving = false;
+		return;
+	}
 
 		const priority = Math.min(3, Math.max(1, Number(form.priority ?? 2)));
 		const link = form.link ? form.link.trim() : '';
 		const payload: WishInput = { title: form.title.trim(), link: link || null, priority };
 
-		if (editingWishId) {
-			const { data, error: err } = await updateWish(editingWishId, payload);
-			if (err) {
-				error = err.message;
-			} else if (data) {
-				upsertWish(data as Wish);
-				info = 'Wish updated.';
-				resetForm();
-			}
-		} else {
-			const { data, error: err } = await insertWish(viewingUserId, payload);
-			if (err) {
-				error = err.message;
-			} else if (data) {
-				upsertWish(data as Wish);
-				info = 'Wish added.';
-				resetForm();
-			}
+	if (editingWishId) {
+		const { data, error: err } = await updateWish(editingWishId, payload);
+		if (err) {
+			error = err.message;
+		} else if (data) {
+			upsertWish(data as Wish);
+			info = 'Wish updated.';
+			resetForm();
+			showModal = false;
+		}
+	} else {
+		const { data, error: err } = await insertWish(viewingUserId, payload);
+		if (err) {
+			error = err.message;
+		} else if (data) {
+			upsertWish(data as Wish);
+			info = 'Wish added.';
+			resetForm();
+			showModal = false;
 		}
 	}
+	saving = false;
+}
 
 	function resetForm() {
 		form = { title: '', link: '', priority: 2 };
@@ -226,6 +260,12 @@
 			link: wish.link ?? '',
 			priority: wish.priority ?? 2
 		};
+		showModal = true;
+	}
+
+	function startAdd() {
+		resetForm();
+		showModal = true;
 	}
 
 	async function deleteWish(id: string) {
@@ -282,16 +322,34 @@
 	<UserGate users={users} loading={loadingUsers} pendingUserId={pendingUserId} onSelect={(id) => (pendingUserId = id)} onContinue={handleContinue} />
 {:else}
 	<section class="page">
-		<WishlistHeader
-			identityUserName={identityUserName}
-			viewingUserId={viewingUserId}
-			viewingUserName={viewingUserName}
-			users={users}
-			sortMode={sortMode}
-			onChangeSort={(mode) => (sortMode = mode)}
-			onChangeView={handleViewChange}
-			onReset={resetSelection}
-		/>
+		<div class="topbar">
+			<div class="tabs">
+				<button class:active={activeView === 'home'} onclick={goHome}>My list</button>
+				<button class:active={activeView === 'friends'} onclick={goFriends}>Friends</button>
+			</div>
+			{#if activeView === 'home'}
+				<button class="primary add" onclick={startAdd}>+ Add wish</button>
+			{/if}
+		</div>
+
+		{#if activeView === 'friends'}
+			<WishlistHeader
+				identityUserName={identityUserName}
+				viewingUserId={viewingUserId}
+				viewingUserName={viewingUserName}
+				users={users.filter((u) => u.id !== identityUserId)}
+				sortMode={sortMode}
+				onChangeSort={(mode) => (sortMode = mode)}
+				onChangeView={handleViewChange}
+				onReset={resetSelection}
+			/>
+		{:else}
+			<div class="home-meta">
+				<p class="muted small">You are</p>
+				<h2>{identityUserName}</h2>
+				<p class="muted">Manage your wishlist here. Others can see it from Friends.</p>
+			</div>
+		{/if}
 
 		{#if error}
 			<p class="error">{error}</p>
@@ -305,8 +363,8 @@
 				<WishList
 					wishes={sortedWishes}
 					purchased={purchased}
-					isOwnerView={isOwnerView}
-					canEdit={canEdit}
+					isOwnerView={viewingUserId === identityUserId}
+					canEdit={viewingUserId === identityUserId}
 					identityUserId={identityUserId}
 					loading={loadingWishes}
 					onEdit={startEdit}
@@ -316,25 +374,26 @@
 			</div>
 
 			<div class="column">
-				<WishForm
-					canEdit={canEdit}
-					form={form}
-					editingWishId={editingWishId}
-					onSave={saveWish}
-					onReset={resetForm}
-					onChange={setForm}
-				/>
+				{#if activeView === 'home'}
+					<p class="muted">Use the Add wish button to manage your list.</p>
+				{:else}
+					<p class="muted">Switch to a friend above to view their list.</p>
+				{/if}
 			</div>
 		</section>
 	</section>
 {/if}
+
+<Modal open={showModal} title={editingWishId ? 'Edit wish' : 'Add wish'} onClose={() => (showModal = false)}>
+	<WishForm form={form} onSave={saveWish} onReset={() => (showModal = false, resetForm())} onChange={setForm} saving={saving} />
+</Modal>
 
 <style>
 	@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
 
 	:global(body) {
 		font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
-		background: radial-gradient(circle at 20% 20%, #f8fbff, #eef2f6);
+		background: radial-gradient(circle at 20% 20%, #f3f7ff, #eef2f6);
 		color: #0f172a;
 		margin: 0;
 	}
@@ -369,6 +428,50 @@
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+	}
+
+	.topbar {
+		display: flex;
+		align-items: center;
+		justify-content: space-between;
+		gap: 1rem;
+	}
+
+	.tabs {
+		display: inline-flex;
+		background: #e2e8f0;
+		border-radius: 12px;
+		padding: 0.15rem;
+	}
+
+	.tabs button {
+		border: none;
+		background: transparent;
+		padding: 0.6rem 1rem;
+		border-radius: 10px;
+		cursor: pointer;
+		font-weight: 700;
+		color: #0f172a;
+	}
+
+	.tabs button.active {
+		background: #fff;
+		box-shadow: 0 8px 20px rgba(15, 23, 42, 0.12);
+	}
+
+	.add {
+		padding-inline: 1.1rem;
+	}
+
+	.home-meta {
+		display: flex;
+		flex-direction: column;
+		gap: 0.2rem;
+		background: #fff;
+		padding: 1rem 1.25rem;
+		border-radius: 14px;
+		box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+		border: 1px solid #e2e8f0;
 	}
 
 	@media (max-width: 900px) {

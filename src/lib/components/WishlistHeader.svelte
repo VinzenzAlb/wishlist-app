@@ -55,6 +55,11 @@
 		align-items: flex-end;
 		gap: 1rem;
 		justify-content: space-between;
+		background: #fff;
+		padding: 1rem 1.25rem;
+		border-radius: 14px;
+		box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+		border: 1px solid #e2e8f0;
 	}
 
 	.muted {

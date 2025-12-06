@@ -29,7 +29,7 @@
 
 <div class="card">
 	<div class="card-header">
-		<h3>Wishes</h3>
+		<h3>Wishlist</h3>
 		{#if loading}
 			<span class="muted small">Loading…</span>
 		{/if}
@@ -86,11 +86,12 @@
 	.card {
 		background: #fff;
 		border-radius: 14px;
-		padding: 1.25rem;
-		box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+		padding: 1.35rem;
+		box-shadow: 0 16px 40px rgba(15, 23, 42, 0.08);
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
+		border: 1px solid #e2e8f0;
 	}
 
 	.card-header {
