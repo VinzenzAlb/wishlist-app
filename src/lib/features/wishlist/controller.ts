@@ -114,6 +114,9 @@ export function createWishlistController() {
 	const editingWishId = writable<string | null>(null);
 	const showModal = writable(false);
 	const saving = writable(false);
+	const showDeleteModal = writable(false);
+	const deleteTarget = writable<Wish | null>(null);
+	const deleting = writable(false);
 
 	let wishlistChannel: ReturnType<typeof supabase.channel> | null = null;
 	let purchasedChannel: ReturnType<typeof supabase.channel> | null = null;
@@ -308,6 +311,16 @@ export function createWishlistController() {
 		showModal.set(true);
 	}
 
+	function startDelete(wish: Wish) {
+		deleteTarget.set(wish);
+		showDeleteModal.set(true);
+	}
+
+	function cancelDelete() {
+		deleteTarget.set(null);
+		showDeleteModal.set(false);
+	}
+
 	async function saveWish() {
 		error.set(null);
 		const currentView = get(viewingUserId);
@@ -359,16 +372,21 @@ export function createWishlistController() {
 		saving.set(false);
 	}
 
-	async function deleteWish(id: string) {
+	async function deleteWish() {
+		const target = get(deleteTarget);
+		if (!target) return;
 		error.set(null);
-		const { error: err } = await removeWish(id);
+		deleting.set(true);
+		const { error: err } = await removeWish(target.id);
 		if (err) {
 			error.set(err.message);
 		} else {
-			wishes.update((list) => list.filter((w) => w.id !== id));
-			purchased.update((list) => list.filter((p) => p.wish_id !== id));
+			wishes.update((list) => list.filter((w) => w.id !== target.id));
+			purchased.update((list) => list.filter((p) => p.wish_id !== target.id));
 			info.set('Wunsch gelöscht.');
+			cancelDelete();
 		}
+		deleting.set(false);
 	}
 
 	async function togglePurchased(wishId: string) {
@@ -456,6 +474,9 @@ export function createWishlistController() {
 		editingWishId.set(null);
 		activeView.set('home');
 		showModal.set(false);
+		showDeleteModal.set(false);
+		deleteTarget.set(null);
+		deleting.set(false);
 		error.set(null);
 		info.set(null);
 		clearIdentityCookie();
@@ -481,7 +502,10 @@ export function createWishlistController() {
 			form,
 			editingWishId,
 			showModal,
-			saving
+			saving,
+			showDeleteModal,
+			deleteTarget,
+			deleting
 		},
 		derived: {
 			canEdit,
@@ -501,6 +525,8 @@ export function createWishlistController() {
 			startAdd,
 			resetForm,
 			saveWish,
+			startDelete,
+			cancelDelete,
 			deleteWish,
 			togglePurchased,
 			setForm,

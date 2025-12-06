@@ -29,7 +29,10 @@
 			editingWishId,
 			showModal,
 			saving,
-			showOnlyAvailable
+			showOnlyAvailable,
+			showDeleteModal,
+			deleteTarget,
+			deleting
 		},
 		derived: { canEdit, isOwnerView, viewingUserName, identityUserName, friendOptions },
 		actions: {
@@ -43,6 +46,8 @@
 			startAdd,
 			resetForm,
 			saveWish,
+			startDelete,
+			cancelDelete,
 			deleteWish,
 			togglePurchased,
 			setForm,
@@ -115,7 +120,7 @@
 						identityUserId={$identityUserId}
 						loading={$loadingWishes}
 						onEdit={startEdit}
-						onDelete={deleteWish}
+						onDelete={startDelete}
 						onTogglePurchased={togglePurchased}
 						onAdd={startAdd}
 						sortMode={$sortMode}
@@ -135,6 +140,16 @@
 
 <Modal open={$showModal} title={$editingWishId ? 'Wunsch bearbeiten' : 'Wunsch hinzufügen'} onClose={() => showModal.set(false)}>
 	<WishForm form={$form} onSave={saveWish} onReset={() => (showModal.set(false), resetForm())} onChange={setForm} saving={$saving} />
+</Modal>
+
+<Modal open={$showDeleteModal} title="Wunsch löschen?" onClose={cancelDelete}>
+	<p>{`Soll der Wunsch "${$deleteTarget?.title ?? ''}" wirklich gelöscht werden?`}</p>
+	<div class="modal-actions">
+		<button type="button" class="btn btn--danger" onclick={deleteWish} disabled={$deleting}>
+			{$deleting ? 'Löschen…' : 'Ja, löschen'}
+		</button>
+		<button type="button" class="btn btn--ghost" onclick={cancelDelete} disabled={$deleting}>Abbrechen</button>
+	</div>
 </Modal>
 
 <style>
@@ -196,6 +211,13 @@
 	.tab.active {
 		background: var(--color-surface);
 		box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
+	}
+
+	.modal-actions {
+		display: flex;
+		justify-content: flex-end;
+		gap: 0.75rem;
+		flex-wrap: wrap;
 	}
 
 	.home-meta {

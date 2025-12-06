@@ -28,7 +28,7 @@ let {
 		identityUserId: string;
 		loading: boolean;
 		onEdit: (wish: Wish) => void;
-		onDelete: (wishId: string) => void;
+		onDelete: (wish: Wish) => void;
 		onTogglePurchased: (wishId: string) => void;
 		onAdd?: () => void;
 		sortMode: SortMode;
@@ -167,9 +167,9 @@ let {
 										<Icon name="edit" size={18} />
 										<span class="sr-only">Wunsch "{wish.title}" bearbeiten</span>
 									</button>
-									<button
-										class="btn btn--danger btn-icon"
-										onclick={() => onDelete(wish.id)}
+								<button
+									class="btn btn--danger btn-icon"
+									onclick={() => onDelete(wish)}
 										aria-label={`Wunsch "${wish.title}" löschen`}
 										title={`Wunsch "${wish.title}" löschen`}
 									>
