@@ -35,11 +35,11 @@
 
 <style>
 	section.gate {
-		min-height: 100vh;
+		min-height: calc(100vh - 120px);
 		display: grid;
 		place-items: center;
 		padding: 1.5rem;
-		background: linear-gradient(135deg, #e0f2fe, #f5f3ff);
+		background: var(--bg-body);
 	}
 
 	.gate-panel {

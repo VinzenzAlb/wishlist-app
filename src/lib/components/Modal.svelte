@@ -59,7 +59,7 @@
 
 	button.icon {
 		border: none;
-		background: #e2e8f0;
+		background: var(--color-surface-alt);
 		border-radius: 50%;
 		width: 32px;
 		height: 32px;
@@ -72,6 +72,6 @@
 	}
 
 	button.icon:hover {
-		background: #cbd5e1;
+		background: var(--color-border);
 	}
 </style>

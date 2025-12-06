@@ -14,12 +14,15 @@
 	--color-danger-strong: #991b1b;
 	--color-danger-surface: #fee2e2;
 	--color-info: #0b5394;
+	--color-pill-bg: #e0f2fe;
+	--color-pill-text: var(--color-info);
 	--radius-md: 10px;
 	--radius-lg: 14px;
 	--radius-xl: 16px;
 	--shadow-soft: 0 12px 32px rgba(15, 23, 42, 0.08);
 	--shadow-strong: 0 20px 60px rgba(15, 23, 42, 0.12);
 	--transition: 150ms ease;
+	--bg-body: radial-gradient(circle at 25% 20%, #e5f0ff, #f7f9fb 50%, #eef2f6 100%);
 }
 
 *,
@@ -30,11 +33,13 @@
 
 body {
 	font-family: var(--font-body);
-	background: radial-gradient(circle at 25% 20%, #e5f0ff, #f7f9fb 50%, #eef2f6 100%);
+	background: var(--bg-body);
 	color: var(--color-text);
 	margin: 0;
 	min-height: 100vh;
 	line-height: 1.5;
+	position: relative;
+	isolation: isolate;
 }
 
 :focus-visible {
@@ -87,8 +92,8 @@ button {
 	align-items: center;
 	padding: 0.35rem 0.75rem;
 	border-radius: 999px;
-	background: #e0f2fe;
-	color: var(--color-info);
+	background: var(--color-pill-bg);
+	color: var(--color-pill-text);
 	font-weight: 600;
 	font-size: 0.95rem;
 }
@@ -170,5 +175,37 @@ button {
 }
 
 .message--info {
-	color: #166534;
+	color: var(--color-info);
+}
+
+body.theme-christmas {
+	--color-text: #0f2c24;
+	--color-muted: #1f4d33;
+	--color-surface: #fff9f3;
+	--color-surface-alt: #fff2e3;
+	--color-border: #f0d8b8;
+	--color-border-strong: #dfc08b;
+	--color-primary: #d7263d;
+	--color-primary-strong: #9b1b2b;
+	--color-danger: #b91c1c;
+	--color-danger-strong: #7f1d1d;
+	--color-danger-surface: #ffe4e6;
+	--color-info: #0f5132;
+	--color-pill-bg: #def7ec;
+	--color-pill-text: #14532d;
+	--shadow-soft: 0 14px 36px rgba(155, 44, 44, 0.1);
+	--shadow-strong: 0 24px 70px rgba(16, 44, 27, 0.16);
+	--bg-body: radial-gradient(circle at 20% 20%, #fff1e6, #fffaf3 38%, #e6f3ec 100%);
+}
+
+body.theme-christmas::before {
+	content: '';
+	position: fixed;
+	inset: 0;
+	background-image: radial-gradient(rgba(255, 255, 255, 0.38) 1px, transparent 0), radial-gradient(rgba(215, 38, 61, 0.12) 1px, transparent 0);
+	background-size: 120px 120px, 180px 180px;
+	background-position: 20px 30px, 60px 80px;
+	pointer-events: none;
+	z-index: 0;
+	opacity: 0.55;
 }

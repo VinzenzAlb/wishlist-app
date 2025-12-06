@@ -21,6 +21,8 @@
 
 	export const ssr = false;
 
+	const THEME_STORAGE_KEY = 'wishlist-theme';
+
 	let users: { id: string; name: string }[] = [];
 	let identityUserId = '';
 	let viewingUserId = '';
@@ -43,8 +45,12 @@
 
 	let wishlistChannel: ReturnType<typeof supabase.channel> | null = null;
 	let purchasedChannel: ReturnType<typeof supabase.channel> | null = null;
+	let isChristmas = false;
 
-	onMount(loadUsers);
+	onMount(() => {
+		initTheme();
+		loadUsers();
+	});
 	onDestroy(unsubscribeRealtime);
 
 	$: sortedWishes = sortWishes(wishes, sortMode);
@@ -54,12 +60,34 @@
 	$: identityUserName = findUserName(identityUserId);
 	$: friendOptions = users.filter((u) => u.id !== identityUserId);
 	$: if (viewingUserId) setupRealtime(viewingUserId);
+	$: syncTheme(isChristmas);
 
 	const findUserName = (id: string) => (id ? users.find((u) => u.id === id)?.name ?? 'Unknown' : 'Unknown');
 	const purchaseFor = (wishId: string) => purchased.find((p) => p.wish_id === wishId);
 
 	function setForm(next: WishInput) {
 		form = next;
+	}
+
+	function initTheme() {
+		if (typeof localStorage === 'undefined') return;
+		const stored = localStorage.getItem(THEME_STORAGE_KEY);
+		isChristmas = stored === 'christmas';
+	}
+
+	function syncTheme(enabled: boolean) {
+		if (typeof document === 'undefined') return;
+		document.body.classList.toggle('theme-christmas', enabled);
+	}
+
+	function persistTheme(enabled: boolean) {
+		if (typeof localStorage === 'undefined') return;
+		localStorage.setItem(THEME_STORAGE_KEY, enabled ? 'christmas' : 'default');
+	}
+
+	function toggleChristmasTheme() {
+		isChristmas = !isChristmas;
+		persistTheme(isChristmas);
 	}
 
 	function unsubscribeRealtime() {
@@ -321,6 +349,22 @@ async function togglePurchased(wishId: string) {
 }
 </script>
 
+<div class="theme-toggle">
+	<div class="theme-toggle__bar">
+		<div>
+			<p class="muted text-sm">{isChristmas ? 'Holiday magic is on.' : 'Bring in a little holiday cheer?'}</p>
+			<p class="theme-toggle__title">{isChristmas ? 'Christmas mode enabled' : 'Christmas mode off'}</p>
+		</div>
+		<button class="theme-toggle__switch" class:active={isChristmas} aria-pressed={isChristmas} onclick={toggleChristmasTheme}>
+			<span aria-hidden="true">🎄</span>
+			<span>{isChristmas ? 'Turn off' : 'Turn on'}</span>
+			<span class="switch-visual" aria-hidden="true">
+				<span class="thumb" />
+			</span>
+		</button>
+	</div>
+</div>
+
 {#if !identityUserId}
 	<UserGate users={users} loading={loadingUsers} pendingUserId={pendingUserId} onSelect={(id) => (pendingUserId = id)} onContinue={handleContinue} />
 {:else}
@@ -455,6 +499,96 @@ async function togglePurchased(wishId: string) {
 
 		.topbar {
 			padding: 1.25rem;
+		}
+	}
+
+	.theme-toggle {
+		max-width: 1200px;
+		margin: 0 auto;
+		padding: 1.25rem 1.5rem 0.25rem;
+	}
+
+	.theme-toggle__bar {
+		display: flex;
+		justify-content: space-between;
+		align-items: center;
+		gap: 1rem;
+		border: 1px solid var(--color-border);
+		background: var(--color-surface);
+		border-radius: 14px;
+		padding: 0.75rem 1rem;
+		box-shadow: var(--shadow-soft);
+	}
+
+	.theme-toggle__title {
+		font-weight: 700;
+		margin: 0.1rem 0 0;
+	}
+
+	.theme-toggle__switch {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.65rem;
+		padding: 0.55rem 0.75rem 0.55rem 0.6rem;
+		border-radius: 999px;
+		border: 1px solid var(--color-border-strong);
+		background: var(--color-surface-alt);
+		cursor: pointer;
+		font-weight: 700;
+		color: var(--color-text);
+		transition: background var(--transition), border-color var(--transition), transform 120ms ease;
+	}
+
+	.theme-toggle__switch:hover {
+		transform: translateY(-1px);
+	}
+
+	.theme-toggle__switch.active {
+		background: linear-gradient(135deg, var(--color-primary), var(--color-primary-strong));
+		color: #ffffff;
+		border-color: transparent;
+		box-shadow: 0 12px 28px rgba(0, 0, 0, 0.08);
+	}
+
+	.switch-visual {
+		width: 48px;
+		height: 26px;
+		border-radius: 999px;
+		background: var(--color-surface);
+		display: inline-flex;
+		align-items: center;
+		padding: 3px;
+		transition: background var(--transition);
+		border: 1px solid var(--color-border);
+	}
+
+	.thumb {
+		width: 18px;
+		height: 18px;
+		border-radius: 50%;
+		background: var(--color-primary);
+		display: block;
+		transition: transform var(--transition), background var(--transition);
+	}
+
+	.theme-toggle__switch.active .switch-visual {
+		background: rgba(255, 255, 255, 0.2);
+		border-color: rgba(255, 255, 255, 0.4);
+	}
+
+	.theme-toggle__switch.active .thumb {
+		transform: translateX(18px);
+		background: #ffffff;
+	}
+
+	@media (max-width: 640px) {
+		.theme-toggle {
+			padding: 1rem 1rem 0;
+		}
+
+		.theme-toggle__bar {
+			align-items: flex-start;
+			flex-direction: column;
 		}
 	}
 </style>
