@@ -199,16 +199,130 @@ body.theme-christmas {
 	--bg-body: radial-gradient(circle at 20% 20%, #fff1e6, #fffaf3 38%, #e6f3ec 100%);
 }
 
-body.theme-christmas::before {
+body.theme-christmas::before,
+body.theme-christmas::after {
 	content: '';
 	position: fixed;
 	inset: 0;
-	background-image: radial-gradient(rgba(255, 255, 255, 0.38) 1px, transparent 0), radial-gradient(rgba(215, 38, 61, 0.12) 1px, transparent 0);
-	background-size: 120px 120px, 180px 180px;
-	background-position: 20px 30px, 60px 80px;
 	pointer-events: none;
-	z-index: 0;
-	opacity: 0.55;
+	z-index: -1;
+}
+
+body.theme-christmas::before {
+	background-image: radial-gradient(rgba(255, 255, 255, 0.75) 1px, transparent 1px),
+		radial-gradient(rgba(255, 255, 255, 0.55) 1px, transparent 1px);
+	background-size: 180px 180px, 120px 120px;
+	animation: snowfall 25s linear infinite;
+}
+
+body.theme-christmas::after {
+	background: radial-gradient(circle at 15% 20%, rgba(255, 214, 165, 0.35), transparent 50%),
+		radial-gradient(circle at 80% 10%, rgba(255, 255, 255, 0.35), transparent 45%),
+		radial-gradient(circle at 50% 80%, rgba(147, 197, 114, 0.35), transparent 35%);
+	animation: aurora 18s ease-in-out infinite;
+}
+
+body.theme-christmas .card,
+body.theme-christmas .panel {
+	background: linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(255, 247, 235, 0.95));
+	border-color: rgba(255, 255, 255, 0.5);
+}
+
+body.theme-christmas .card::after {
+	content: '';
+	position: absolute;
+	inset: 12px;
+	border-radius: inherit;
+	pointer-events: none;
+	background: radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.4), transparent 55%);
+	opacity: 0.4;
+}
+
+body.theme-christmas .card,
+body.theme-christmas .panel {
+	position: relative;
+	overflow: hidden;
+}
+
+body.theme-christmas .page-shell::before {
+	content: '';
+	position: absolute;
+	inset: -20% -10% auto;
+	height: 300px;
+	background: radial-gradient(circle, rgba(255, 255, 255, 0.35), transparent 60%);
+	filter: blur(20px);
+	pointer-events: none;
+}
+
+body.theme-christmas .page-shell::after {
+	content: '';
+	position: absolute;
+	inset: auto -5% -10% -5%;
+	height: 280px;
+	background: radial-gradient(circle at 50% 100%, rgba(215, 38, 61, 0.12), transparent 60%);
+	filter: blur(30px);
+	pointer-events: none;
+}
+
+body.theme-christmas .btn--primary {
+	box-shadow: 0 15px 35px rgba(215, 38, 61, 0.35);
+}
+
+body.theme-christmas .btn--danger {
+	border-color: rgba(185, 28, 28, 0.2);
+}
+
+body.theme-christmas .tab.active {
+	box-shadow: 0 18px 25px rgba(215, 38, 61, 0.25);
+}
+
+body.theme-christmas .pill {
+	background: rgba(255, 255, 255, 0.8);
+}
+
+body.theme-christmas .btn {
+	text-transform: uppercase;
+	letter-spacing: 0.05em;
+}
+
+body.theme-christmas .input,
+body.theme-christmas .btn {
+	border-image: repeating-linear-gradient(
+			135deg,
+			#d7263d 0,
+			#d7263d 6px,
+			#ffffff 6px,
+			#ffffff 12px
+		)
+		1;
+}
+
+body.theme-christmas ::selection {
+	background: rgba(215, 38, 61, 0.8);
+	color: #fff;
+}
+
+@keyframes snowfall {
+	0% {
+		background-position: 0 0, 0 0;
+	}
+
+	100% {
+		background-position: 0 600px, 0 400px;
+	}
+}
+
+@keyframes aurora {
+	0%,
+	100% {
+		filter: hue-rotate(0deg);
+		opacity: 1;
+	}
+
+	50% {
+		filter: hue-rotate(40deg);
+		opacity: 0.8;
+	}
 }
 
 body.theme-light {
