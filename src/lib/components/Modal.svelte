@@ -29,11 +29,12 @@
 	}
 
 	.modal {
-		background: #fff;
-		border-radius: 14px;
+		background: var(--color-surface);
+		border-radius: var(--radius-lg);
 		padding: 1rem 1.25rem 1.25rem;
 		width: min(520px, 100%);
-		box-shadow: 0 20px 60px rgba(15, 23, 42, 0.2);
+		box-shadow: var(--shadow-strong);
+		border: 1px solid var(--color-border);
 		display: flex;
 		flex-direction: column;
 		gap: 1rem;
@@ -66,5 +67,11 @@
 		font-size: 1rem;
 		display: grid;
 		place-items: center;
+		color: var(--color-text);
+		transition: background var(--transition);
+	}
+
+	button.icon:hover {
+		background: #cbd5e1;
 	}
 </style>

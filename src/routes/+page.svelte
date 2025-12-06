@@ -212,17 +212,20 @@
 
 async function saveWish() {
 	error = null;
-	saving = true;
-	if (!viewingUserId || !identityUserId) return;
+	if (!viewingUserId || !identityUserId) {
+		error = 'Select who you are first.';
+		return;
+	}
 	if (!form.title.trim()) {
 		error = 'Title is required.';
-		saving = false;
 		return;
 	}
 
-		const priority = Math.min(3, Math.max(1, Number(form.priority ?? 2)));
-		const link = form.link ? form.link.trim() : '';
-		const payload: WishInput = { title: form.title.trim(), link: link || null, priority };
+	saving = true;
+
+	const priority = Math.min(3, Math.max(1, Number(form.priority ?? 2)));
+	const link = form.link ? form.link.trim() : '';
+	const payload: WishInput = { title: form.title.trim(), link: link || null, priority };
 
 	if (editingWishId) {
 		const { data, error: err } = await updateWish(editingWishId, payload);
@@ -248,74 +251,74 @@ async function saveWish() {
 	saving = false;
 }
 
-	function resetForm() {
-		form = { title: '', link: '', priority: 2 };
-		editingWishId = null;
+function resetForm() {
+	form = { title: '', link: '', priority: 2 };
+	editingWishId = null;
+}
+
+function startEdit(wish: Wish) {
+	editingWishId = wish.id;
+	form = {
+		title: wish.title,
+		link: wish.link ?? '',
+		priority: wish.priority ?? 2
+	};
+	showModal = true;
+}
+
+function startAdd() {
+	resetForm();
+	showModal = true;
+}
+
+async function deleteWish(id: string) {
+	error = null;
+	const { error: err } = await removeWish(id);
+	if (err) {
+		error = err.message;
+	} else {
+		wishes = wishes.filter((w) => w.id !== id);
+		purchased = purchased.filter((p) => p.wish_id !== id);
+		info = 'Wish deleted.';
+	}
+}
+
+async function togglePurchased(wishId: string) {
+	if (!identityUserId) {
+		error = 'Select who you are first.';
+		return;
 	}
 
-	function startEdit(wish: Wish) {
-		editingWishId = wish.id;
-		form = {
-			title: wish.title,
-			link: wish.link ?? '',
-			priority: wish.priority ?? 2
-		};
-		showModal = true;
+	if (isOwnerView) {
+		error = 'You cannot mark your own wish as purchased.';
+		return;
 	}
 
-	function startAdd() {
-		resetForm();
-		showModal = true;
-	}
+	const existing = purchaseFor(wishId);
+	if (existing) {
+		if (existing.user_id !== identityUserId) {
+			error = 'Only the person who marked this can unmark it.';
+			return;
+		}
 
-	async function deleteWish(id: string) {
-		error = null;
-		const { error: err } = await removeWish(id);
+		const { error: err } = await removePurchase(existing.id);
 		if (err) {
 			error = err.message;
 		} else {
-			wishes = wishes.filter((w) => w.id !== id);
-			purchased = purchased.filter((p) => p.wish_id !== id);
-			info = 'Wish deleted.';
+			purchased = purchased.filter((p) => p.id !== existing.id);
+			info = 'Marked as not purchased.';
 		}
+		return;
 	}
 
-	async function togglePurchased(wishId: string) {
-		if (!identityUserId) {
-			error = 'Select who you are first.';
-			return;
-		}
-
-		if (isOwnerView) {
-			error = 'You cannot mark your own wish as purchased.';
-			return;
-		}
-
-		const existing = purchaseFor(wishId);
-		if (existing) {
-			if (existing.user_id !== identityUserId) {
-				error = 'Only the person who marked this can unmark it.';
-				return;
-			}
-
-			const { error: err } = await removePurchase(existing.id);
-			if (err) {
-				error = err.message;
-			} else {
-				purchased = purchased.filter((p) => p.id !== existing.id);
-				info = 'Marked as not purchased.';
-			}
-			return;
-		}
-
-		const { data, error: err } = await insertPurchase(wishId, identityUserId);
-		if (err) {
-			error = err.message;
-		} else if (data) {
-			upsertPurchase(data as Purchased);
-			info = 'Marked as purchased.';
-		}
+	const { data, error: err } = await insertPurchase(wishId, identityUserId);
+	if (err) {
+		error = err.message;
+	} else if (data) {
+		upsertPurchase(data as Purchased);
+		info = 'Marked as purchased.';
 	}
+}
 </script>
 
 {#if !identityUserId}
@@ -324,11 +327,11 @@ async function saveWish() {
 	<section class="page">
 		<div class="topbar">
 			<div class="tabs">
-				<button class:active={activeView === 'home'} onclick={goHome}>My list</button>
-				<button class:active={activeView === 'friends'} onclick={goFriends}>Friends</button>
+				<button class="tab" class:active={activeView === 'home'} onclick={goHome}>My list</button>
+				<button class="tab" class:active={activeView === 'friends'} onclick={goFriends}>Friends</button>
 			</div>
 			{#if activeView === 'home'}
-				<button class="primary add" onclick={startAdd}>+ Add wish</button>
+				<button class="btn btn--primary add" onclick={startAdd}>+ Add wish</button>
 			{/if}
 		</div>
 
@@ -345,41 +348,31 @@ async function saveWish() {
 			/>
 		{:else}
 			<div class="home-meta">
-				<p class="muted small">You are</p>
+				<p class="muted text-sm">You are</p>
 				<h2>{identityUserName}</h2>
 				<p class="muted">Manage your wishlist here. Others can see it from Friends.</p>
 			</div>
 		{/if}
 
 		{#if error}
-			<p class="error">{error}</p>
+			<p class="message message--error">{error}</p>
 		{/if}
 		{#if info}
-			<p class="info">{info}</p>
+			<p class="message message--info">{info}</p>
 		{/if}
 
 		<section class="board">
-			<div class="column">
-				<WishList
-					wishes={sortedWishes}
-					purchased={purchased}
-					isOwnerView={viewingUserId === identityUserId}
-					canEdit={viewingUserId === identityUserId}
-					identityUserId={identityUserId}
-					loading={loadingWishes}
-					onEdit={startEdit}
-					onDelete={deleteWish}
-					onTogglePurchased={togglePurchased}
-				/>
-			</div>
-
-			<div class="column">
-				{#if activeView === 'home'}
-					<p class="muted">Use the Add wish button to manage your list.</p>
-				{:else}
-					<p class="muted">Switch to a friend above to view their list.</p>
-				{/if}
-			</div>
+			<WishList
+				wishes={sortedWishes}
+				purchased={purchased}
+				isOwnerView={viewingUserId === identityUserId}
+				canEdit={viewingUserId === identityUserId}
+				identityUserId={identityUserId}
+				loading={loadingWishes}
+				onEdit={startEdit}
+				onDelete={deleteWish}
+				onTogglePurchased={togglePurchased}
+			/>
 		</section>
 	</section>
 {/if}
@@ -389,16 +382,6 @@ async function saveWish() {
 </Modal>
 
 <style>
-	@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
-
-	:global(body) {
-		font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, sans-serif;
-		background: radial-gradient(circle at 25% 20%, #e5f0ff, #f7f9fb 50%, #eef2f6 100%);
-		color: #0f172a;
-		margin: 0;
-		min-height: 100vh;
-	}
-
 	section.page {
 		max-width: 1200px;
 		margin: 0 auto;
@@ -406,16 +389,6 @@ async function saveWish() {
 		display: flex;
 		flex-direction: column;
 		gap: 1.25rem;
-	}
-
-	.error {
-		color: #b91c1c;
-		margin: 0.25rem 0 0;
-	}
-
-	.info {
-		color: #166534;
-		margin: 0.25rem 0 0;
 	}
 
 	.topbar {
@@ -428,49 +401,51 @@ async function saveWish() {
 
 	.tabs {
 		display: inline-flex;
-		background: #e2e8f0;
+		background: var(--color-border);
 		border-radius: 14px;
 		padding: 0.2rem;
 		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 	}
 
-	.tabs button {
+	.tab {
 		border: none;
 		background: transparent;
 		padding: 0.7rem 1.2rem;
 		border-radius: 12px;
 		cursor: pointer;
 		font-weight: 700;
-		color: #0f172a;
+		color: var(--color-text);
+		transition: transform 120ms ease, box-shadow 120ms ease, background 150ms ease;
 	}
 
-	.tabs button.active {
-		background: #fff;
+	.tab:hover {
+		transform: translateY(-1px);
+	}
+
+	.tab.active {
+		background: var(--color-surface);
 		box-shadow: 0 10px 24px rgba(15, 23, 42, 0.16);
 	}
 
 	.add {
-		padding: 0.65rem 1.15rem;
 		border-radius: 12px;
 		box-shadow: 0 12px 30px rgba(37, 99, 235, 0.25);
 		font-weight: 700;
-	}
-
-	.column {
-		display: flex;
-		flex-direction: column;
-		gap: 1rem;
 	}
 
 	.home-meta {
 		display: flex;
 		flex-direction: column;
 		gap: 0.35rem;
-		background: #fff;
+		background: var(--color-surface);
 		padding: 1.2rem 1.35rem;
 		border-radius: 16px;
-		box-shadow: 0 12px 32px rgba(15, 23, 42, 0.08);
-		border: 1px solid #e2e8f0;
+		box-shadow: var(--shadow-soft);
+		border: 1px solid var(--color-border);
+	}
+
+	.board {
+		display: block;
 	}
 
 	@media (max-width: 640px) {
