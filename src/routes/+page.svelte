@@ -49,7 +49,7 @@
 	let form = {
 		title: '',
 		link: '',
-		priority: 0
+		priority: 2
 	};
 	let editingWishId: string | null = null;
 
@@ -78,6 +78,7 @@
 
 	const findUserName = (id: string) => (id ? users.find((u) => u.id === id)?.name ?? 'Unknown' : 'Unknown');
 	const purchaseFor = (wishId: string) => purchased.find((p) => p.wish_id === wishId);
+	const priorityStars = (priority: number | null) => '★'.repeat(Math.max(1, Math.min(3, priority ?? 1)));
 
 	async function loadUsers() {
 		loadingUsers = true;
@@ -202,10 +203,12 @@
 			return;
 		}
 
+		const priority = Math.min(3, Math.max(1, Number(form.priority ?? 2)));
+
 		if (editingWishId) {
 			const { error: err } = await supabase
 				.from('wishes')
-				.update({ title: form.title.trim(), link: form.link.trim() || null, priority: Number(form.priority ?? 0) })
+				.update({ title: form.title.trim(), link: form.link.trim() || null, priority })
 				.eq('id', editingWishId);
 			if (err) {
 				error = err.message;
@@ -217,7 +220,7 @@
 			const { error: err } = await supabase.from('wishes').insert({
 				title: form.title.trim(),
 				link: form.link.trim() || null,
-				priority: Number(form.priority ?? 0),
+				priority,
 				user_id: viewingUserId
 			});
 			if (err) {
@@ -230,7 +233,7 @@
 	}
 
 	function resetForm() {
-		form = { title: '', link: '', priority: 0 };
+		form = { title: '', link: '', priority: 2 };
 		editingWishId = null;
 	}
 
@@ -239,7 +242,7 @@
 		form = {
 			title: wish.title,
 			link: wish.link ?? '',
-			priority: wish.priority ?? 0
+			priority: wish.priority ?? 2
 		};
 	}
 
@@ -258,14 +261,30 @@
 			error = 'Select who you are first.';
 			return;
 		}
+
+		if (isOwnerView) {
+			error = 'You cannot mark your own wish as purchased.';
+			return;
+		}
+
 		const existing = purchased.find((p) => p.wish_id === wishId);
 		if (existing) {
+			if (existing.user_id !== identityUserId) {
+				error = 'Only the person who marked this can unmark it.';
+				return;
+			}
+
 			const { error: err } = await supabase.from('purchased').delete().eq('id', existing.id);
 			if (err) {
 				error = err.message;
 			} else {
 				info = 'Marked as not purchased.';
 			}
+			return;
+		}
+
+		if (purchased.find((p) => p.wish_id === wishId)) {
+			error = 'This wish is already marked as purchased.';
 			return;
 		}
 
@@ -281,6 +300,7 @@
 	}
 
 	$: canEdit = Boolean(viewingUserId && viewingUserId === identityUserId);
+	$: isOwnerView = canEdit;
 	$: viewingUserName = findUserName(viewingUserId);
 	$: identityUserName = findUserName(identityUserId);
 </script>
@@ -361,6 +381,7 @@
 					{:else}
 						<ul class="wish-list">
 							{#each sortedWishes as wish}
+								{@const purchase = purchaseFor(wish.id)}
 								<li class="wish">
 									<div class="wish-main">
 										<div>
@@ -368,28 +389,25 @@
 											{#if wish.link}
 												<a class="muted small" href={wish.link} target="_blank" rel="noreferrer">Open link</a>
 											{/if}
-											<p class="muted small">Priority: {wish.priority ?? 0}</p>
+											<p class="muted small">Priority: {priorityStars(wish.priority)}</p>
 										</div>
 										<div class="wish-actions">
-											<button on:click={() => togglePurchased(wish.id)}>
-												{#if purchased.find((p) => p.wish_id === wish.id)}
-													Unmark
-												{:else}
-													Mark purchased
-												{/if}
-											</button>
 											{#if canEdit}
 												<button on:click={() => startEdit(wish)}>Edit</button>
 												<button class="danger" on:click={() => deleteWish(wish.id)}>Delete</button>
+											{:else if !isOwnerView}
+												{#if purchase}
+													<button on:click={() => togglePurchased(wish.id)} disabled={purchase.user_id !== identityUserId}>
+														{purchase.user_id === identityUserId ? 'Unmark' : 'Purchased'}
+													</button>
+												{:else}
+													<button class="primary" on:click={() => togglePurchased(wish.id)}>Mark purchased</button>
+												{/if}
 											{/if}
 										</div>
 									</div>
-									{#if purchaseFor(wish.id)}
-										{#if viewingUserId === identityUserId}
-											<p class="pill">Purchased</p>
-										{:else}
-											<p class="pill">Purchased by {findUserName(purchaseFor(wish.id)?.user_id ?? '')}</p>
-										{/if}
+									{#if !isOwnerView && purchase}
+										<p class="pill">Purchased by {findUserName(purchase.user_id)}</p>
 									{/if}
 								</li>
 							{/each}
@@ -416,8 +434,12 @@
 							<input placeholder="https://example.com" bind:value={form.link} />
 						</label>
 						<label>
-							<span>Priority (lower = higher)</span>
-							<input type="number" bind:value={form.priority} />
+							<span>Priority</span>
+							<select bind:value={form.priority}>
+								<option value={1}>★</option>
+								<option value={2}>★★</option>
+								<option value={3}>★★★</option>
+							</select>
 						</label>
 						<div class="form-actions">
 							<button class="primary" on:click={saveWish} disabled={!canEdit}>
