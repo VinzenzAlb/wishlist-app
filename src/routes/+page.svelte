@@ -77,8 +77,24 @@
 	});
 
 	const findUserName = (id: string) => (id ? users.find((u) => u.id === id)?.name ?? 'Unknown' : 'Unknown');
-	const purchaseFor = (wishId: string) => purchased.find((p) => p.wish_id === wishId);
+	const purchaseFor = (wishId: string, list: Purchased[] = purchased) => list.find((p) => p.wish_id === wishId);
 	const priorityStars = (priority: number | null) => '★'.repeat(Math.max(1, Math.min(3, priority ?? 1)));
+	const upsertWish = (wish: Wish) => {
+		const index = wishes.findIndex((w) => w.id === wish.id);
+		if (index !== -1) {
+			wishes = wishes.toSpliced(index, 1, wish);
+		} else {
+			wishes = [...wishes, wish];
+		}
+	};
+	const upsertPurchase = (purchase: Purchased) => {
+		const existingIndex = purchased.findIndex((p) => p.wish_id === purchase.wish_id);
+		if (existingIndex !== -1) {
+			purchased = purchased.toSpliced(existingIndex, 1, purchase);
+		} else {
+			purchased = [...purchased, purchase];
+		}
+	};
 
 	async function loadUsers() {
 		loadingUsers = true;
@@ -161,9 +177,9 @@
 				{ event: '*', schema: 'public', table: 'wishes', filter: `user_id=eq.${userId}` },
 				(payload) => {
 					if (payload.eventType === 'INSERT' && payload.new) {
-						wishes = [...wishes, payload.new as Wish];
+						upsertWish(payload.new as Wish);
 					} else if (payload.eventType === 'UPDATE' && payload.new) {
-						wishes = wishes.map((w) => (w.id === payload.new.id ? (payload.new as Wish) : w));
+						upsertWish(payload.new as Wish);
 					} else if (payload.eventType === 'DELETE' && payload.old) {
 						wishes = wishes.filter((w) => w.id !== payload.old.id);
 						purchased = purchased.filter((p) => p.wish_id !== payload.old.id);
@@ -184,9 +200,9 @@
 					if (!wishes.find((w) => w.id === record.wish_id)) return;
 
 					if (payload.eventType === 'INSERT' && payload.new) {
-						purchased = [...purchased.filter((p) => p.wish_id !== record.wish_id), payload.new as Purchased];
+						upsertPurchase(payload.new as Purchased);
 					} else if (payload.eventType === 'UPDATE' && payload.new) {
-						purchased = purchased.map((p) => (p.id === record.id ? (payload.new as Purchased) : p));
+						upsertPurchase(payload.new as Purchased);
 					} else if (payload.eventType === 'DELETE' && payload.old) {
 						purchased = purchased.filter((p) => p.id !== record.id);
 					}
@@ -204,28 +220,34 @@
 		}
 
 		const priority = Math.min(3, Math.max(1, Number(form.priority ?? 2)));
+		const payload = { title: form.title.trim(), link: form.link.trim() || null, priority };
 
 		if (editingWishId) {
-			const { error: err } = await supabase
-				.from('wishes')
-				.update({ title: form.title.trim(), link: form.link.trim() || null, priority })
-				.eq('id', editingWishId);
+			const { data: updated, error: err } = await supabase.from('wishes').update(payload).eq('id', editingWishId).select().single();
 			if (err) {
 				error = err.message;
 			} else {
+				if (updated) {
+					upsertWish(updated as Wish);
+				}
 				info = 'Wish updated.';
 				resetForm();
 			}
 		} else {
-			const { error: err } = await supabase.from('wishes').insert({
-				title: form.title.trim(),
-				link: form.link.trim() || null,
-				priority,
-				user_id: viewingUserId
-			});
+			const { data: inserted, error: err } = await supabase
+				.from('wishes')
+				.insert({
+					...payload,
+					user_id: viewingUserId
+			})
+				.select()
+				.single();
 			if (err) {
 				error = err.message;
 			} else {
+				if (inserted) {
+					upsertWish(inserted as Wish);
+				}
 				info = 'Wish added.';
 				resetForm();
 			}
@@ -252,6 +274,8 @@
 		if (err) {
 			error = err.message;
 		} else {
+			wishes = wishes.filter((w) => w.id !== id);
+			purchased = purchased.filter((p) => p.wish_id !== id);
 			info = 'Wish deleted.';
 		}
 	}
@@ -278,23 +302,27 @@
 			if (err) {
 				error = err.message;
 			} else {
+				purchased = purchased.filter((p) => p.id !== existing.id);
 				info = 'Marked as not purchased.';
 			}
 			return;
 		}
 
-		if (purchased.find((p) => p.wish_id === wishId)) {
-			error = 'This wish is already marked as purchased.';
-			return;
-		}
-
-		const { error: err } = await supabase.from('purchased').insert({
-			wish_id: wishId,
-			user_id: identityUserId
-		});
+		const { data: inserted, error: err } = await supabase
+			.from('purchased')
+			.insert({
+				wish_id: wishId,
+				user_id: identityUserId
+			})
+			.select()
+			.single();
 		if (err) {
 			error = err.message;
 		} else {
+			if (inserted) {
+				// ensure only one purchase per wish locally
+				upsertPurchase(inserted as Purchased);
+			}
 			info = 'Marked as purchased.';
 		}
 	}
@@ -381,7 +409,6 @@
 					{:else}
 						<ul class="wish-list">
 							{#each sortedWishes as wish}
-								{@const purchase = purchaseFor(wish.id)}
 								<li class="wish">
 									<div class="wish-main">
 										<div>
@@ -396,6 +423,7 @@
 												<button on:click={() => startEdit(wish)}>Edit</button>
 												<button class="danger" on:click={() => deleteWish(wish.id)}>Delete</button>
 											{:else if !isOwnerView}
+												{@const purchase = purchaseFor(wish.id, purchased)}
 												{#if purchase}
 													<button on:click={() => togglePurchased(wish.id)} disabled={purchase.user_id !== identityUserId}>
 														{purchase.user_id === identityUserId ? 'Unmark' : 'Purchased'}
@@ -406,8 +434,8 @@
 											{/if}
 										</div>
 									</div>
-									{#if !isOwnerView && purchase}
-										<p class="pill">Purchased by {findUserName(purchase.user_id)}</p>
+									{#if !isOwnerView && purchaseFor(wish.id, purchased)}
+										<p class="pill">Purchased</p>
 									{/if}
 								</li>
 							{/each}
