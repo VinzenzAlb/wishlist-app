@@ -7,6 +7,7 @@ const INITIAL_FORM: WishInput = { title: '', link: '', priority: 2 };
 const IDENTITY_COOKIE_NAME = 'wishlist-identity';
 const IDENTITY_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 const FILTER_COOKIE_NAME = 'wishlist-filters';
+const ALLOWED_LINK_PROTOCOLS = new Set(['http:', 'https:']);
 
 type FilterCookieValue = {
 	sortMode?: SortMode;
@@ -74,6 +75,22 @@ function writeFilterCookie(filters: FilterCookieValue) {
 function clearFilterCookie() {
 	if (typeof document === 'undefined') return;
 	document.cookie = `${FILTER_COOKIE_NAME}=; Max-Age=0; Path=/; SameSite=Lax`;
+}
+
+function sanitizeWishLink(input: string | null | undefined) {
+	if (!input) return null;
+	const value = input.trim();
+	if (!value) return null;
+	try {
+		const parsed = new URL(value);
+		if (!ALLOWED_LINK_PROTOCOLS.has(parsed.protocol)) {
+			return null;
+		}
+		parsed.hash = '';
+		return parsed.toString();
+	} catch {
+		return null;
+	}
 }
 
 export function createWishlistController() {
@@ -309,8 +326,13 @@ export function createWishlistController() {
 		saving.set(true);
 
 		const priority = Math.min(3, Math.max(1, Number(currentForm.priority ?? 2)));
-		const link = currentForm.link ? currentForm.link.trim() : '';
-		const payload: WishInput = { title: currentForm.title.trim(), link: link || null, priority };
+		const sanitizedLink = sanitizeWishLink(currentForm.link);
+		if (currentForm.link && !sanitizedLink) {
+			error.set('Bitte gib einen gültigen Link mit http(s) an.');
+			saving.set(false);
+			return;
+		}
+		const payload: WishInput = { title: currentForm.title.trim(), link: sanitizedLink, priority };
 		const editingId = get(editingWishId);
 
 		if (editingId) {

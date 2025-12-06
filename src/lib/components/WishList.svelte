@@ -53,6 +53,21 @@ let {
 		const normalized = Math.max(3, Math.min(base || 3, 6));
 		return Array.from({ length: normalized });
 	});
+	const allowedProtocols = new Set(['http:', 'https:']);
+
+	const safeLink = (value: string | null) => {
+		if (!value) return null;
+		try {
+			const parsed = new URL(value);
+			if (!allowedProtocols.has(parsed.protocol)) {
+				return null;
+			}
+			parsed.hash = '';
+			return parsed.toString();
+		} catch {
+			return null;
+		}
+	};
 </script>
 
 
@@ -131,12 +146,13 @@ let {
 			<ul class="wish-list">
 				{#each visibleWishes() as wish}
 					{@const purchase = purchaseFor(wish.id)}
+					{@const link = safeLink(wish.link)}
 					<li class="wish">
 						<div class="wish-main">
 							<div>
 								<p class="wish-title">{wish.title}</p>
-								{#if wish.link}
-									<a class="muted text-sm" href={wish.link} target="_blank" rel="noreferrer">Link öffnen</a>
+								{#if link}
+									<a class="muted text-sm" href={link} target="_blank" rel="noreferrer noopener">Link öffnen</a>
 								{/if}
 								<p class="muted text-sm">Priorität: {priorityStars(wish.priority)}</p>
 							</div>
