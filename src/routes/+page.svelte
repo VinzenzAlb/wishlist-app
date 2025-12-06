@@ -66,8 +66,8 @@
 			<section class="page">
 				<div class="topbar">
 					<div class="tabs">
-						<button class="tab" class:active={$activeView === 'home'} onclick={goHome}>My list</button>
-						<button class="tab" class:active={$activeView === 'friends'} onclick={goFriends}>Friends</button>
+						<button class="tab" class:active={$activeView === 'home'} onclick={goHome}>Meine Liste</button>
+						<button class="tab" class:active={$activeView === 'friends'} onclick={goFriends}>Freunde</button>
 					</div>
 				</div>
 
@@ -86,15 +86,15 @@
 					<div class="home-meta">
 						<div class="home-meta-header">
 							<div>
-								<p class="muted text-sm">You are</p>
+								<p class="muted text-sm">Du bist</p>
 								<h2>{$identityUserName}</h2>
 							</div>
-								<button class="btn btn--ghost" onclick={resetSelection} aria-label="Log out" title="Log out">
+								<button class="btn btn--ghost" onclick={resetSelection} aria-label="Abmelden" title="Abmelden">
 									<Icon name="logout" size={18} />
-									<span>Log out</span>
+									<span>Abmelden</span>
 								</button>
 							</div>
-						<p class="muted">Manage your wishlist here. Others can see it from Friends.</p>
+						<p class="muted">Verwalte deine Wunschliste hier. Deine Freunde finden sie im Tab Freunde.</p>
 					</div>
 				{/if}
 
@@ -129,7 +129,7 @@
 	</footer>
 </div>
 
-<Modal open={$showModal} title={$editingWishId ? 'Edit wish' : 'Add wish'} onClose={() => showModal.set(false)}>
+<Modal open={$showModal} title={$editingWishId ? 'Wunsch bearbeiten' : 'Wunsch hinzufügen'} onClose={() => showModal.set(false)}>
 	<WishForm form={$form} onSave={saveWish} onReset={() => (showModal.set(false), resetForm())} onChange={setForm} saving={$saving} />
 </Modal>
 

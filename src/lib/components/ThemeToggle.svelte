@@ -6,16 +6,21 @@
 	type Theme = (typeof THEMES)[number];
 
 	const themeOptions: { id: Theme; name: string; description: string }[] = [
-		{ id: 'christmas', name: 'Christmas', description: 'Default. Cozy reds & greens.' },
-		{ id: 'light', name: 'Light', description: 'Clean with soft blues.' },
-		{ id: 'dark', name: 'Dark', description: 'Noir with neon accents.' }
+		{
+			id: 'christmas',
+			name: 'Weihnachten',
+			description: 'Standard. Gemütliche Rot- und Grüntöne.'
+		},
+		{ id: 'light', name: 'Hell', description: 'Klar mit sanften Blautönen.' },
+		{ id: 'dark', name: 'Dunkel', description: 'Dunkel mit Neon-Akzenten.' }
 	];
 
 	let theme: Theme = 'christmas';
 	let hydrated = false;
 
 	onMount(() => {
-		const stored = typeof localStorage === 'undefined' ? null : localStorage.getItem(THEME_STORAGE_KEY);
+		const stored =
+			typeof localStorage === 'undefined' ? null : localStorage.getItem(THEME_STORAGE_KEY);
 		if (isTheme(stored)) {
 			theme = stored;
 		} else {
@@ -54,21 +59,31 @@
 <div class="theme-toggle">
 	<div class="theme-toggle__bar">
 		<div>
-			<p class="muted text-sm">Make it yours</p>
+			<p class="muted text-sm">Gestalte es nach deinem Geschmack</p>
 			<p class="theme-toggle__title">
-				{theme === 'christmas' ? 'Holiday magic' : theme === 'dark' ? 'Midnight mode' : 'Light mode'}
+				{theme === 'christmas'
+					? 'Festliche Magie'
+					: theme === 'dark'
+						? 'Mitternachtsmodus'
+						: 'Heller Modus'}
 			</p>
 			<p class="muted text-sm">
 				{theme === 'christmas'
-					? 'Default experience with festive glow.'
+					? 'Standarderlebnis mit festlichem Glanz.'
 					: theme === 'dark'
-						? 'High-contrast dark with neon highlights.'
-						: 'Clean, airy palette with soft blues.'}
+						? 'Dunkles High-Contrast-Design mit Neon-Akzenten.'
+						: 'Helle, luftige Palette mit sanften Blautönen.'}
 			</p>
 		</div>
 		<div class="theme-toggle__options">
 			{#each themeOptions as option}
-				<button type="button" class="theme-chip" class:active={theme === option.id} onclick={() => selectTheme(option.id)} aria-pressed={theme === option.id}>
+				<button
+					type="button"
+					class="theme-chip"
+					class:active={theme === option.id}
+					onclick={() => selectTheme(option.id)}
+					aria-pressed={theme === option.id}
+				>
 					<span class={`swatch swatch--${option.id}`} aria-hidden="true"></span>
 					<span class="theme-chip__text">
 						<span class="theme-chip__name">{option.name}</span>
@@ -85,7 +100,6 @@
 		max-width: 1200px;
 		width: 100%;
 		margin: 0 auto;
-		padding: 0 1.5rem 1.75rem;
 	}
 
 	.theme-toggle__bar {
@@ -119,7 +133,11 @@
 		gap: 0.6rem;
 		align-items: center;
 		cursor: pointer;
-		transition: transform 120ms ease, box-shadow 160ms ease, border-color var(--transition), background var(--transition);
+		transition:
+			transform 120ms ease,
+			box-shadow 160ms ease,
+			border-color var(--transition),
+			background var(--transition);
 		color: inherit;
 		text-align: left;
 	}
@@ -173,10 +191,6 @@
 	}
 
 	@media (max-width: 640px) {
-		.theme-toggle {
-			padding: 0 1rem 1.25rem;
-		}
-
 		.theme-toggle__bar {
 			align-items: stretch;
 		}

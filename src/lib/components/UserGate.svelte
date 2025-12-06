@@ -12,15 +12,15 @@
 
 <section class="gate">
 	<div class="panel gate-panel">
-		<h1>Wishlist</h1>
-		<p class="muted">Pick your name to load your wishlist. No login needed.</p>
+		<h1>Wunschliste</h1>
+		<p class="muted">Wähle deinen Namen, um deine Wunschliste zu laden. Kein Login nötig.</p>
 
 		<label class="form-field">
-			<span>Who are you?</span>
+			<span>Wer bist du?</span>
 			<select class="input" value={pendingUserId} disabled={loading} onchange={(e) => onSelect((e.target as HTMLSelectElement).value)}>
-				<option value="">Select your name</option>
+				<option value="">Wähle deinen Namen</option>
 				{#if loading}
-					<option disabled>Loading users...</option>
+					<option disabled>Lade Personen…</option>
 				{:else}
 					{#each users as user}
 						<option value={user.id}>{user.name}</option>
@@ -29,7 +29,7 @@
 			</select>
 		</label>
 
-		<button class="btn btn--primary" onclick={onContinue} disabled={!pendingUserId}>Continue</button>
+		<button class="btn btn--primary" onclick={onContinue} disabled={!pendingUserId}>Weiter</button>
 	</div>
 </section>
 

@@ -14,15 +14,15 @@
 
 <div class="form">
 	<label class="form-field">
-		<span>Title *</span>
-		<input class="input" placeholder="Trip to Japan" value={form.title} oninput={(e) => updateField('title', (e.target as HTMLInputElement).value)} />
+		<span>Titel *</span>
+		<input class="input" placeholder="Reise nach Japan" value={form.title} oninput={(e) => updateField('title', (e.target as HTMLInputElement).value)} />
 	</label>
 	<label class="form-field">
 		<span>Link</span>
-		<input class="input" placeholder="https://example.com" value={form.link ?? ''} oninput={(e) => updateField('link', (e.target as HTMLInputElement).value)} />
+		<input class="input" placeholder="https://beispiel.de" value={form.link ?? ''} oninput={(e) => updateField('link', (e.target as HTMLInputElement).value)} />
 	</label>
 	<label class="form-field">
-		<span>Priority</span>
+		<span>Priorität</span>
 		<select class="input" value={form.priority} onchange={(e) => updateField('priority', Number((e.target as HTMLSelectElement).value))}>
 			<option value={1}>★</option>
 			<option value={2}>★★</option>
@@ -31,9 +31,9 @@
 	</label>
 	<div class="form-actions">
 		<button class="btn btn--primary" onclick={onSave} disabled={saving}>
-			{saving ? 'Saving…' : 'Save wish'}
+			{saving ? 'Speichern…' : 'Wunsch speichern'}
 		</button>
-		<button class="btn btn--ghost" onclick={onReset}>Cancel</button>
+		<button class="btn btn--ghost" onclick={onReset}>Abbrechen</button>
 	</div>
 </div>
 

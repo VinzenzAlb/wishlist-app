@@ -129,7 +129,7 @@ export function createWishlistController() {
 	}
 
 	function findUserName(list: User[], id: string) {
-		return id ? list.find((u) => u.id === id)?.name ?? 'Unknown' : 'Unknown';
+		return id ? list.find((u) => u.id === id)?.name ?? 'Unbekannt' : 'Unbekannt';
 	}
 
 	function setForm(next: WishInput) {
@@ -242,7 +242,7 @@ export function createWishlistController() {
 		error.set(null);
 		const pending = get(pendingUserId);
 		if (!pending) {
-			error.set('Choose a user to continue.');
+			error.set('Wähle eine Person aus, um fortzufahren.');
 			return;
 		}
 		identityUserId.set(pending);
@@ -286,11 +286,11 @@ export function createWishlistController() {
 		const currentForm = get(form);
 
 		if (!currentView || !currentIdentity) {
-			error.set('Select who you are first.');
+			error.set('Wähle zuerst, wer du bist.');
 			return;
 		}
 		if (!currentForm.title.trim()) {
-			error.set('Title is required.');
+			error.set('Bitte gib einen Titel ein.');
 			return;
 		}
 
@@ -307,7 +307,7 @@ export function createWishlistController() {
 				error.set(err.message);
 			} else if (data) {
 				upsertWish(data as Wish);
-				info.set('Wish updated.');
+				info.set('Wunsch aktualisiert.');
 				resetForm();
 				showModal.set(false);
 			}
@@ -317,7 +317,7 @@ export function createWishlistController() {
 				error.set(err.message);
 			} else if (data) {
 				upsertWish(data as Wish);
-				info.set('Wish added.');
+				info.set('Wunsch hinzugefügt.');
 				resetForm();
 				showModal.set(false);
 			}
@@ -333,7 +333,7 @@ export function createWishlistController() {
 		} else {
 			wishes.update((list) => list.filter((w) => w.id !== id));
 			purchased.update((list) => list.filter((p) => p.wish_id !== id));
-			info.set('Wish deleted.');
+			info.set('Wunsch gelöscht.');
 		}
 	}
 
@@ -342,19 +342,19 @@ export function createWishlistController() {
 		const ownerView = get(isOwnerView);
 
 		if (!currentIdentity) {
-			error.set('Select who you are first.');
+			error.set('Wähle zuerst, wer du bist.');
 			return;
 		}
 
 		if (ownerView) {
-			error.set('You cannot mark your own wish as purchased.');
+			error.set('Du kannst deinen eigenen Wunsch nicht als gekauft markieren.');
 			return;
 		}
 
 		const existing = get(purchased).find((p) => p.wish_id === wishId);
 		if (existing) {
 			if (existing.user_id !== currentIdentity) {
-				error.set('Only the person who marked this can unmark it.');
+				error.set('Nur wer markiert hat, kann die Markierung wieder lösen.');
 				return;
 			}
 
@@ -363,7 +363,7 @@ export function createWishlistController() {
 				error.set(err.message);
 			} else {
 				purchased.update((list) => list.filter((p) => p.id !== existing.id));
-				info.set('Marked as not purchased.');
+				info.set('Markierung aufgehoben.');
 			}
 			return;
 		}
@@ -373,7 +373,7 @@ export function createWishlistController() {
 			error.set(err.message);
 		} else if (data) {
 			upsertPurchase(data as Purchased);
-			info.set('Marked as purchased.');
+			info.set('Als gekauft markiert.');
 		}
 	}
 
@@ -390,10 +390,10 @@ export function createWishlistController() {
 	async function goFriends() {
 		activeView.set('friends');
 		const options = get(friendOptions);
-		if (!options.length) {
-			info.set('No friends added yet.');
-			return;
-		}
+			if (!options.length) {
+				info.set('Noch keine Freunde hinzugefügt.');
+				return;
+			}
 
 		const identity = get(identityUserId);
 		const hasOption = (id: string | null | undefined) => Boolean(id && options.some((o) => o.id === id));

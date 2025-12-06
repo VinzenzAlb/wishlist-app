@@ -26,17 +26,17 @@
 <header class="card header">
 	<div class="header-wrapper">
 		<div class="identity">
-			<p class="muted text-sm">You are</p>
+			<p class="muted text-sm">Du bist</p>
 			<h2>{identityUserName}</h2>
 		</div>
-		<button class="btn btn--ghost" onclick={onReset} aria-label="Log out" title="Log out">
+		<button class="btn btn--ghost" onclick={onReset} aria-label="Abmelden" title="Abmelden">
 			<Icon name="logout" size={18} />
-			<span>Log out</span>
+			<span>Abmelden</span>
 		</button>
 	</div>
 	<div class="select-row">
 		<label class="form-field">
-			<span>Viewing wishlist for</span>
+			<span>Wunschliste von</span>
 			<select
 				class="input"
 				value={viewingUserId}
@@ -48,15 +48,15 @@
 			</select>
 		</label>
 		<label class="form-field">
-			<span>Sort by</span>
+			<span>Sortieren nach</span>
 			<select
 				class="input"
 				value={sortMode}
 				onchange={(e) => onChangeSort((e.target as HTMLSelectElement).value as SortMode)}
 			>
-				<option value="priority">Priority</option>
-				<option value="created_at">Date created</option>
-				<option value="title">Alphabetical</option>
+				<option value="priority">Priorität</option>
+				<option value="created_at">Erstellungsdatum</option>
+				<option value="title">Alphabetisch</option>
 			</select>
 		</label>
 	</div>

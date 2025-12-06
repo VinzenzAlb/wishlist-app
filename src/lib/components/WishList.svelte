@@ -35,21 +35,21 @@ let {
 <div class="card wish-card">
 	<div class="card-header">
 		<div class="card-heading">
-			<h3>{isOwnerView ? 'My wishlist' : viewingUserName ? `${viewingUserName}'s wishlist` : 'Wishlist'}</h3>
+			<h3>{isOwnerView ? 'Meine Wunschliste' : viewingUserName ? `Wunschliste von ${viewingUserName}` : 'Wunschliste'}</h3>
 			{#if loading}
-				<span class="muted text-sm">Loading…</span>
+				<span class="muted text-sm">Wird geladen…</span>
 			{/if}
 		</div>
 		{#if isOwnerView && onAdd}
-			<button class="btn btn--primary btn-icon" onclick={onAdd} aria-label="Add wish" title="Add wish">
+			<button class="btn btn--primary btn-icon" onclick={onAdd} aria-label="Wunsch hinzufügen" title="Wunsch hinzufügen">
 				<Icon name="plus" size={18} />
-				<span class="sr-only">Add wish</span>
+				<span class="sr-only">Wunsch hinzufügen</span>
 			</button>
 		{/if}
 	</div>
 
 	{#if !wishes.length && !loading}
-		<p class="muted">No wishes yet.</p>
+		<p class="muted">Noch keine Wünsche.</p>
 	{:else}
 		<ul class="wish-list">
 			{#each wishes as wish}
@@ -59,43 +59,43 @@ let {
 						<div>
 							<p class="wish-title">{wish.title}</p>
 							{#if wish.link}
-								<a class="muted text-sm" href={wish.link} target="_blank" rel="noreferrer">Open link</a>
+								<a class="muted text-sm" href={wish.link} target="_blank" rel="noreferrer">Link öffnen</a>
 							{/if}
-							<p class="muted text-sm">Priority: {priorityStars(wish.priority)}</p>
+							<p class="muted text-sm">Priorität: {priorityStars(wish.priority)}</p>
 						</div>
 						<div class="wish-actions">
 							{#if canEdit}
 								<button
 									class="btn btn--ghost btn-icon"
 									onclick={() => onEdit(wish)}
-									aria-label={`Edit ${wish.title}`}
-									title={`Edit ${wish.title}`}
+									aria-label={`Wunsch "${wish.title}" bearbeiten`}
+									title={`Wunsch "${wish.title}" bearbeiten`}
 								>
 									<Icon name="edit" size={18} />
-									<span class="sr-only">Edit {wish.title}</span>
+									<span class="sr-only">Wunsch "{wish.title}" bearbeiten</span>
 								</button>
 								<button
 									class="btn btn--danger btn-icon"
 									onclick={() => onDelete(wish.id)}
-									aria-label={`Delete ${wish.title}`}
-									title={`Delete ${wish.title}`}
+									aria-label={`Wunsch "${wish.title}" löschen`}
+									title={`Wunsch "${wish.title}" löschen`}
 								>
 									<Icon name="trash" size={18} />
-									<span class="sr-only">Delete {wish.title}</span>
+									<span class="sr-only">Wunsch "{wish.title}" löschen</span>
 								</button>
 							{:else if !isOwnerView}
 								{#if purchase}
 									<button class="btn" onclick={() => onTogglePurchased(wish.id)} disabled={purchase.user_id !== identityUserId}>
-										{purchase.user_id === identityUserId ? 'Unmark' : 'Purchased by someone else'}
+										{purchase.user_id === identityUserId ? 'Markierung entfernen' : 'Schon von jemand anderem reserviert'}
 									</button>
 								{:else}
-									<button class="btn btn--primary" onclick={() => onTogglePurchased(wish.id)}>Mark purchased</button>
+									<button class="btn btn--primary" onclick={() => onTogglePurchased(wish.id)}>Als gekauft markieren</button>
 								{/if}
 							{/if}
 						</div>
 					</div>
 					{#if !isOwnerView && purchase}
-						<p class="pill">{purchase.user_id === identityUserId ? 'Purchased by you' : 'Purchased'}</p>
+						<p class="pill">{purchase.user_id === identityUserId ? 'Von dir gekauft' : 'Gekauft'}</p>
 					{/if}
 				</li>
 			{/each}

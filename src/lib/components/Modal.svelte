@@ -7,7 +7,7 @@
 		<div class="modal" role="dialog" aria-modal="true" aria-label={title} tabindex="-1" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.key === 'Escape' && onClose()}>
 			<div class="modal-header">
 				<h3>{title}</h3>
-				<button class="icon" onclick={onClose} aria-label="Close">×</button>
+				<button class="icon" onclick={onClose} aria-label="Schließen">×</button>
 			</div>
 			<div class="modal-body">
 				{@render children?.()}
