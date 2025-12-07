@@ -11,7 +11,10 @@
 
 	export const ssr = false;
 
-	const SNOWFLAKE_COUNT = 70;
+	const BASE_SNOWFLAKE_COUNT = 70;
+	const BASE_VIEWPORT_AREA = 1440 * 900;
+	const MIN_SNOWFLAKE_COUNT = 40;
+	const MAX_SNOWFLAKE_COUNT = 220;
 
 	type Snowflake = {
 		left: number;
@@ -21,13 +24,34 @@
 		sway: number;
 	};
 
-	const snowflakes: Snowflake[] = Array.from({ length: SNOWFLAKE_COUNT }, () => ({
-		left: Math.random() * 100,
-		delay: -Math.random() * 24,
-		duration: 14 + Math.random() * 16,
-		size: 0.5 + Math.random() * 1.2,
-		sway: 20 + Math.random() * 40
-	}));
+	const createSnowflakes = (count: number): Snowflake[] =>
+		Array.from({ length: count }, () => ({
+			left: Math.random() * 100,
+			delay: -Math.random() * 24,
+			duration: 14 + Math.random() * 16,
+			size: 0.5 + Math.random() * 1.2,
+			sway: 20 + Math.random() * 40
+		}));
+
+	const getSnowflakeCount = () => {
+		if (typeof window === 'undefined') {
+			return BASE_SNOWFLAKE_COUNT;
+		}
+
+		const area = window.innerWidth * window.innerHeight;
+		const densityCount = Math.round((area / BASE_VIEWPORT_AREA) * BASE_SNOWFLAKE_COUNT);
+
+		return Math.max(MIN_SNOWFLAKE_COUNT, Math.min(MAX_SNOWFLAKE_COUNT, densityCount));
+	};
+
+	let snowflakes: Snowflake[] = createSnowflakes(BASE_SNOWFLAKE_COUNT);
+
+	const updateSnowfall = () => {
+		const count = getSnowflakeCount();
+		snowflakes = createSnowflakes(count);
+	};
+
+	const handleResize = () => updateSnowfall();
 
 	const {
 		stores: {
@@ -76,6 +100,11 @@
 
 	onMount(() => {
 		loadUsers();
+
+		updateSnowfall();
+		window.addEventListener('resize', handleResize);
+
+		return () => window.removeEventListener('resize', handleResize);
 	});
 
 	onDestroy(unsubscribeRealtime);
