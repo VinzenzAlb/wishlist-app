@@ -5,14 +5,14 @@ const ALLOWED_LINK_PROTOCOLS = new Set(['http:', 'https:']);
 export function sortWishes(list: Wish[], mode: SortMode) {
 	return [...list].sort((a, b) => {
 		if (mode === 'priority') {
-			const priorityDelta = (a.priority ?? 0) - (b.priority ?? 0);
+			const priorityDelta = (b.priority ?? 0) - (a.priority ?? 0);
 			if (priorityDelta !== 0) return priorityDelta;
-			return new Date(a.created_at).valueOf() - new Date(b.created_at).valueOf();
+			return new Date(b.created_at).valueOf() - new Date(a.created_at).valueOf();
 		}
 		if (mode === 'title') {
 			return a.title.localeCompare(b.title);
 		}
-		return new Date(a.created_at).valueOf() - new Date(b.created_at).valueOf();
+		return new Date(b.created_at).valueOf() - new Date(a.created_at).valueOf();
 	});
 }
 
