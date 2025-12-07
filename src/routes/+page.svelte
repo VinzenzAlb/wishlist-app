@@ -272,7 +272,7 @@
 
 	.page-footer {
 		width: 100%;
-		padding: 0 1.5rem 2.5rem;
+		padding: 0 0 2.5rem;
 		display: flex;
 		justify-content: center;
 	}
