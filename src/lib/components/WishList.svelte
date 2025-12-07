@@ -177,7 +177,15 @@ let {
 							<div>
 								<p class="wish-title">{wish.title}</p>
 								{#if link}
-									<a class="muted text-sm" href={link} target="_blank" rel="noreferrer noopener">Link öffnen</a>
+									<a
+										class="wish-link"
+										href={link}
+										target="_blank"
+										rel="noreferrer noopener"
+									>
+										<Icon name="external" size={14} />
+										<span>Link öffnen</span>
+									</a>
 								{/if}
 								<p class="muted text-sm">Priorität: {priorityStars(wish.priority)}</p>
 							</div>
@@ -306,6 +314,21 @@ let {
 	.wish-title {
 		font-weight: 700;
 		margin: 0 0 0.2rem 0;
+	}
+
+	.wish-link {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.25rem;
+		margin: 0.1rem 0 0.35rem;
+		font-size: 0.9rem;
+		color: var(--color-primary);
+		text-decoration: none;
+		font-weight: 600;
+	}
+
+	.wish-link:hover {
+		text-decoration: underline;
 	}
 
 	.wish-actions {
