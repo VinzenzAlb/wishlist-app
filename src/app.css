@@ -223,18 +223,6 @@ body.theme-christmas {
 	--bg-body: radial-gradient(circle at 20% 20%, #fff1e6, #fffaf3 38%, #e6f3ec 100%);
 }
 
-body.theme-christmas::before {
-	content: '';
-	position: fixed;
-	inset: 0;
-	background-image: radial-gradient(rgba(255, 255, 255, 0.38) 1px, transparent 0), radial-gradient(rgba(215, 38, 61, 0.12) 1px, transparent 0);
-	background-size: 120px 120px, 180px 180px;
-	background-position: 20px 30px, 60px 80px;
-	pointer-events: none;
-	z-index: 0;
-	opacity: 0.55;
-}
-
 body.theme-light {
 	--color-text: #0f172a;
 	--color-muted: #475569;

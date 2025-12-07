@@ -11,6 +11,24 @@
 
 	export const ssr = false;
 
+	const SNOWFLAKE_COUNT = 150;
+
+	type Snowflake = {
+		left: number;
+		delay: number;
+		duration: number;
+		size: number;
+		sway: number;
+	};
+
+	const snowflakes: Snowflake[] = Array.from({ length: SNOWFLAKE_COUNT }, () => ({
+		left: Math.random() * 100,
+		delay: -Math.random() * 24,
+		duration: 14 + Math.random() * 16,
+		size: 0.5 + Math.random() * 1.2,
+		sway: 20 + Math.random() * 40
+	}));
+
 	const {
 		stores: {
 			users,
@@ -68,13 +86,23 @@
 <div class="page-shell">
 	<main class="page-main">
 		{#if !$identityUserId}
-			<UserGate users={$users} loading={$loadingUsers} pendingUserId={$pendingUserId} onSelect={(id) => pendingUserId.set(id)} onContinue={handleContinue} />
+			<UserGate
+				users={$users}
+				loading={$loadingUsers}
+				pendingUserId={$pendingUserId}
+				onSelect={(id) => pendingUserId.set(id)}
+				onContinue={handleContinue}
+			/>
 		{:else}
 			<section class="page">
 				<div class="topbar">
 					<div class="tabs">
-						<button class="tab" class:active={$activeView === 'home'} onclick={goHome}>Meine Liste</button>
-						<button class="tab" class:active={$activeView === 'friends'} onclick={goFriends}>Freunde</button>
+						<button class="tab" class:active={$activeView === 'home'} onclick={goHome}
+							>Meine Liste</button
+						>
+						<button class="tab" class:active={$activeView === 'friends'} onclick={goFriends}
+							>Freunde</button
+						>
 					</div>
 				</div>
 
@@ -94,12 +122,19 @@
 								<p class="muted text-sm">Du bist</p>
 								<h2>{$identityUserName}</h2>
 							</div>
-								<button class="btn btn--ghost" onclick={resetSelection} aria-label="Abmelden" title="Abmelden">
-									<Icon name="logout" size={18} />
-									<span>Abmelden</span>
-								</button>
-							</div>
-						<p class="muted">Verwalte deine Wunschliste hier. Deine Freunde finden sie im Tab Freunde.</p>
+							<button
+								class="btn btn--ghost"
+								onclick={resetSelection}
+								aria-label="Abmelden"
+								title="Abmelden"
+							>
+								<Icon name="logout" size={18} />
+								<span>Abmelden</span>
+							</button>
+						</div>
+						<p class="muted">
+							Verwalte deine Wunschliste hier. Deine Freunde finden sie im Tab Freunde.
+						</p>
 					</div>
 				{/if}
 
@@ -129,10 +164,28 @@
 	<footer class="page-footer">
 		<ThemeToggle />
 	</footer>
+	<div class="snowfield" aria-hidden="true">
+		{#each snowflakes as flake}
+			<span
+				class="snowflake"
+				style={`--flake-left: ${flake.left}%; --flake-delay: ${flake.delay}s; --flake-duration: ${flake.duration}s; --flake-size: ${flake.size}; --flake-sway: ${flake.sway}px;`}
+			></span>
+		{/each}
+	</div>
 </div>
 
-<Modal open={$showModal} title={$editingWishId ? 'Wunsch bearbeiten' : 'Wunsch hinzufügen'} onClose={() => showModal.set(false)}>
-	<WishForm form={$form} onSave={saveWish} onReset={() => (showModal.set(false), resetForm())} onChange={setForm} saving={$saving} />
+<Modal
+	open={$showModal}
+	title={$editingWishId ? 'Wunsch bearbeiten' : 'Wunsch hinzufügen'}
+	onClose={() => showModal.set(false)}
+>
+	<WishForm
+		form={$form}
+		onSave={saveWish}
+		onReset={() => (showModal.set(false), resetForm())}
+		onChange={setForm}
+		saving={$saving}
+	/>
 </Modal>
 
 <Modal open={$showDeleteModal} title="Wunsch löschen?" onClose={cancelDelete}>
@@ -141,7 +194,9 @@
 		<button type="button" class="btn btn--danger" onclick={deleteWish} disabled={$deleting}>
 			{$deleting ? 'Löschen…' : 'Ja, löschen'}
 		</button>
-		<button type="button" class="btn btn--ghost" onclick={cancelDelete} disabled={$deleting}>Abbrechen</button>
+		<button type="button" class="btn btn--ghost" onclick={cancelDelete} disabled={$deleting}
+			>Abbrechen</button
+		>
 	</div>
 </Modal>
 
@@ -194,7 +249,10 @@
 		cursor: pointer;
 		font-weight: 700;
 		color: var(--color-text);
-		transition: transform 120ms ease, box-shadow 120ms ease, background 150ms ease;
+		transition:
+			transform 120ms ease,
+			box-shadow 120ms ease,
+			background 150ms ease;
 	}
 
 	.tab:hover {
@@ -241,6 +299,58 @@
 		padding: 0 1.5rem 2.5rem;
 		display: flex;
 		justify-content: center;
+	}
+
+
+	.snowfield {
+		position: fixed;
+		inset: 0;
+		pointer-events: none;
+		z-index: 1;
+		overflow: hidden;
+		opacity: 0;
+		transition: opacity 200ms ease-out;
+	}
+
+	.snowflake {
+		position: absolute;
+		top: -10vh;
+		left: var(--flake-left, 50%);
+		width: calc(4px * var(--flake-size, 1));
+		height: calc(4px * var(--flake-size, 1));
+		border-radius: 999px;
+		background: rgba(255, 255, 255, 0.94);
+		box-shadow: 0 0 10px rgba(255, 255, 255, 0.85);
+		opacity: 0.95;
+		animation:
+			fall var(--flake-duration, 20s) linear infinite,
+			sway calc(var(--flake-duration, 20s) * 0.6) ease-in-out infinite;
+		animation-delay: var(--flake-delay, 0s);
+	}
+
+	@keyframes fall {
+		0% {
+			top: -10vh;
+		}
+		100% {
+			top: 110vh;
+		}
+	}
+
+	@keyframes sway {
+		0% {
+			transform: translateX(0);
+		}
+		50% {
+			transform: translateX(var(--flake-sway, 30px));
+		}
+		100% {
+			transform: translateX(0);
+		}
+	}
+
+	:global(body.theme-christmas) .snowfield {
+		opacity: 1;
 	}
 
 	@media (max-width: 640px) {
