@@ -11,7 +11,7 @@
 
 	export const ssr = false;
 
-	const SNOWFLAKE_COUNT = 150;
+	const SNOWFLAKE_COUNT = 70;
 
 	type Snowflake = {
 		left: number;
