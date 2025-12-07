@@ -1,13 +1,14 @@
 import { fetchPurchasesFor, fetchUsers, fetchWishes, insertPurchase, insertWish, removePurchase, removeWish, updateWish } from '$lib/services/wishlistService';
 import { supabase } from '$lib/supabaseClient';
 import type { Purchased, SortMode, User, Wish, WishInput } from '$lib/types';
+import { clearCookie, readCookie, writeCookie } from '$lib/utils/cookies';
+import { sanitizeWishLink } from './utils';
 import { derived, get, writable } from 'svelte/store';
 
 const INITIAL_FORM: WishInput = { title: '', link: '', priority: 2 };
 const IDENTITY_COOKIE_NAME = 'wishlist-identity';
 const IDENTITY_COOKIE_MAX_AGE = 60 * 60 * 24 * 30;
 const FILTER_COOKIE_NAME = 'wishlist-filters';
-const ALLOWED_LINK_PROTOCOLS = new Set(['http:', 'https:']);
 
 type FilterCookieValue = {
 	sortMode?: SortMode;
@@ -15,42 +16,15 @@ type FilterCookieValue = {
 	showOnlyAvailable?: boolean;
 };
 
-function readIdentityCookie() {
-	if (typeof document === 'undefined') return null;
-	const target = document.cookie
-		.split(';')
-		.map((entry) => entry.trim())
-		.find((entry) => entry.startsWith(`${IDENTITY_COOKIE_NAME}=`));
-	if (!target) return null;
-	const value = target.substring(IDENTITY_COOKIE_NAME.length + 1);
-	return value ? decodeURIComponent(value) : null;
-}
-
-function writeIdentityCookie(id: string) {
-	if (typeof document === 'undefined') return;
-	document.cookie = `${IDENTITY_COOKIE_NAME}=${encodeURIComponent(id)}; Max-Age=${IDENTITY_COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
-}
-
-function clearIdentityCookie() {
-	if (typeof document === 'undefined') return;
-	document.cookie = `${IDENTITY_COOKIE_NAME}=; Max-Age=0; Path=/; SameSite=Lax`;
-}
-
 function isSortModeValue(value: unknown): value is SortMode {
 	return value === 'priority' || value === 'created_at' || value === 'title';
 }
 
 function readFilterCookie(): FilterCookieValue | null {
-	if (typeof document === 'undefined') return null;
-	const target = document.cookie
-		.split(';')
-		.map((entry) => entry.trim())
-		.find((entry) => entry.startsWith(`${FILTER_COOKIE_NAME}=`));
-	if (!target) return null;
-	const raw = target.substring(FILTER_COOKIE_NAME.length + 1);
+	const raw = readCookie(FILTER_COOKIE_NAME);
 	if (!raw) return null;
 	try {
-		const parsed = JSON.parse(decodeURIComponent(raw)) as Record<string, unknown>;
+		const parsed = JSON.parse(raw) as Record<string, unknown>;
 		const filters: FilterCookieValue = {};
 		if (isSortModeValue(parsed.sortMode)) {
 			filters.sortMode = parsed.sortMode;
@@ -68,29 +42,11 @@ function readFilterCookie(): FilterCookieValue | null {
 }
 
 function writeFilterCookie(filters: FilterCookieValue) {
-	if (typeof document === 'undefined') return;
-	document.cookie = `${FILTER_COOKIE_NAME}=${encodeURIComponent(JSON.stringify(filters))}; Max-Age=${IDENTITY_COOKIE_MAX_AGE}; Path=/; SameSite=Lax`;
+	writeCookie(FILTER_COOKIE_NAME, JSON.stringify(filters), { maxAge: IDENTITY_COOKIE_MAX_AGE });
 }
 
 function clearFilterCookie() {
-	if (typeof document === 'undefined') return;
-	document.cookie = `${FILTER_COOKIE_NAME}=; Max-Age=0; Path=/; SameSite=Lax`;
-}
-
-function sanitizeWishLink(input: string | null | undefined) {
-	if (!input) return null;
-	const value = input.trim();
-	if (!value) return null;
-	try {
-		const parsed = new URL(value);
-		if (!ALLOWED_LINK_PROTOCOLS.has(parsed.protocol)) {
-			return null;
-		}
-		parsed.hash = '';
-		return parsed.toString();
-	} catch {
-		return null;
-	}
+	clearCookie(FILTER_COOKIE_NAME);
 }
 
 export function createWishlistController() {
@@ -152,7 +108,7 @@ export function createWishlistController() {
 		persistFilterPrefs({ showOnlyAvailable: value });
 	});
 
-	const storedIdentity = readIdentityCookie();
+	const storedIdentity = readCookie(IDENTITY_COOKIE_NAME);
 	if (storedIdentity) {
 		identityUserId.set(storedIdentity);
 		viewingUserId.set(storedIdentity);
@@ -280,7 +236,7 @@ export function createWishlistController() {
 		identityUserId.set(pending);
 		viewingUserId.set(pending);
 		activeView.set('home');
-		writeIdentityCookie(pending);
+		writeCookie(IDENTITY_COOKIE_NAME, pending, { maxAge: IDENTITY_COOKIE_MAX_AGE });
 		await loadDataFor(pending);
 	}
 
@@ -479,7 +435,7 @@ export function createWishlistController() {
 		deleting.set(false);
 		error.set(null);
 		info.set(null);
-		clearIdentityCookie();
+		clearCookie(IDENTITY_COOKIE_NAME);
 		filterPrefs = {};
 		clearFilterCookie();
 	}

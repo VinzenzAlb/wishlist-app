@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { priorityStars, sortWishes } from '$lib/services/wishlistService';
+	import { priorityStars, sanitizeWishLink, sortWishes } from '$lib/features/wishlist/utils';
 	import type { Purchased, SortMode, Wish } from '$lib/types';
 	import Icon from './Icon.svelte';
 
@@ -53,21 +53,7 @@ let {
 		const normalized = Math.max(3, Math.min(base || 3, 6));
 		return Array.from({ length: normalized });
 	});
-	const allowedProtocols = new Set(['http:', 'https:']);
-
-	const safeLink = (value: string | null) => {
-		if (!value) return null;
-		try {
-			const parsed = new URL(value);
-			if (!allowedProtocols.has(parsed.protocol)) {
-				return null;
-			}
-			parsed.hash = '';
-			return parsed.toString();
-		} catch {
-			return null;
-		}
-	};
+	const safeLink = (value: string | null) => sanitizeWishLink(value);
 </script>
 
 

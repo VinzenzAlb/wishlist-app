@@ -1,5 +1,5 @@
 import { supabase } from '$lib/supabaseClient';
-import type { Purchased, SortMode, User, Wish, WishInput } from '$lib/types';
+import type { WishInput } from '$lib/types';
 
 export async function fetchUsers() {
 	return supabase.from('users').select('id, name').order('name');
@@ -43,20 +43,4 @@ export async function insertPurchase(wishId: string, userId: string) {
 
 export async function removePurchase(purchaseId: string) {
 	return supabase.from('purchased').delete().eq('id', purchaseId);
-}
-
-export function sortWishes(list: Wish[], mode: SortMode) {
-	return [...list].sort((a, b) => {
-		if (mode === 'priority') {
-			return (a.priority ?? 0) - (b.priority ?? 0) || new Date(a.created_at).valueOf() - new Date(b.created_at).valueOf();
-		}
-		if (mode === 'title') {
-			return a.title.localeCompare(b.title);
-		}
-		return new Date(a.created_at).valueOf() - new Date(b.created_at).valueOf();
-	});
-}
-
-export function priorityStars(priority: number | null) {
-	return '★'.repeat(Math.max(1, Math.min(3, priority ?? 1)));
 }
