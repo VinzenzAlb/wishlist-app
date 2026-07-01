@@ -52,8 +52,8 @@
 			deleteWish,
 			togglePurchased,
 			setForm,
-			setupRealtime,
-			unsubscribeRealtime
+			startPolling,
+			stopPolling
 		}
 	} = createWishlistController();
 
@@ -61,9 +61,9 @@
 		loadUsers();
 	});
 
-	onDestroy(unsubscribeRealtime);
+	onDestroy(stopPolling);
 
-	$: if ($viewingUserId) setupRealtime($viewingUserId);
+	$: if ($viewingUserId) startPolling($viewingUserId);
 </script>
 
 <div class="page-shell">

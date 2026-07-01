@@ -1,5 +1,4 @@
 import { fetchPurchasesFor, fetchUsers, fetchWishes, insertPurchase, insertWish, removePurchase, removeWish, updateWish } from '$lib/services/wishlistService';
-import { supabase } from '$lib/supabaseClient';
 import type { Purchased, SortMode, User, Wish, WishInput } from '$lib/types';
 import { clearCookie, readCookie, writeCookie } from '$lib/utils/cookies';
 import { sanitizeWishLink } from './utils';
@@ -74,8 +73,11 @@ export function createWishlistController() {
 	const deleteTarget = writable<Wish | null>(null);
 	const deleting = writable(false);
 
-	let wishlistChannel: ReturnType<typeof supabase.channel> | null = null;
-	let purchasedChannel: ReturnType<typeof supabase.channel> | null = null;
+	// Live updates via polling while the tab is visible (replaces Supabase Realtime).
+	const POLL_INTERVAL_MS = 5000;
+	let pollTimer: ReturnType<typeof setInterval> | null = null;
+	let visibilityHandler: (() => void) | null = null;
+	let polledUserId = '';
 
 	let filterPrefs: FilterCookieValue = readFilterCookie() ?? {};
 
@@ -124,11 +126,14 @@ export function createWishlistController() {
 		form.set(next);
 	}
 
-	function unsubscribeRealtime() {
-		wishlistChannel?.unsubscribe();
-		purchasedChannel?.unsubscribe();
-		wishlistChannel = null;
-		purchasedChannel = null;
+	function stopPolling() {
+		if (pollTimer) clearInterval(pollTimer);
+		pollTimer = null;
+		if (visibilityHandler && typeof document !== 'undefined') {
+			document.removeEventListener('visibilitychange', visibilityHandler);
+		}
+		visibilityHandler = null;
+		polledUserId = '';
 	}
 
 	function upsertWish(wish: Wish) {
@@ -145,50 +150,22 @@ export function createWishlistController() {
 		});
 	}
 
-	function setupRealtime(userId: string) {
-		if (wishlistChannel && wishlistChannel.topic === `wishes-${userId}`) return;
+	function startPolling(userId: string) {
+		if (polledUserId === userId && pollTimer) return;
+		stopPolling();
+		polledUserId = userId;
+		if (typeof document === 'undefined') return;
 
-		unsubscribeRealtime();
-		wishlistChannel = supabase.channel(`wishes-${userId}`);
-		wishlistChannel
-			.on(
-				'postgres_changes',
-				{ event: '*', schema: 'public', table: 'wishes', filter: `user_id=eq.${userId}` },
-				(payload) => {
-					if (payload.eventType === 'INSERT' && payload.new) {
-						upsertWish(payload.new as Wish);
-					} else if (payload.eventType === 'UPDATE' && payload.new) {
-						upsertWish(payload.new as Wish);
-					} else if (payload.eventType === 'DELETE' && payload.old) {
-						const wishId = payload.old.id as string;
-						wishes.update((list) => list.filter((w) => w.id !== wishId));
-						purchased.update((list) => list.filter((p) => p.wish_id !== wishId));
-					}
-				}
-			)
-			.subscribe();
-
-		purchasedChannel = supabase.channel(`purchased-${userId}`);
-		purchasedChannel
-			.on(
-				'postgres_changes',
-				{ event: '*', schema: 'public', table: 'purchased' },
-				(payload) => {
-					const record = (payload.new as Purchased) ?? (payload.old as Purchased);
-					if (!record) return;
-					if (!get(wishes).find((w) => w.id === record.wish_id)) return;
-
-					if (payload.eventType === 'INSERT' && payload.new) {
-						upsertPurchase(payload.new as Purchased);
-					} else if (payload.eventType === 'UPDATE' && payload.new) {
-						upsertPurchase(payload.new as Purchased);
-					} else if (payload.eventType === 'DELETE' && payload.old) {
-						const id = record.id;
-						purchased.update((list) => list.filter((p) => p.id !== id));
-					}
-				}
-			)
-			.subscribe();
+		const refresh = () => {
+			if (document.visibilityState === 'visible' && polledUserId) {
+				void loadDataFor(polledUserId, { silent: true });
+			}
+		};
+		pollTimer = setInterval(refresh, POLL_INTERVAL_MS);
+		// Refetch immediately when the tab regains focus, so a viewer sees changes
+		// (e.g. an item marked as bought) as soon as they come back to the page.
+		visibilityHandler = refresh;
+		document.addEventListener('visibilitychange', visibilityHandler);
 	}
 
 	async function loadUsers() {
@@ -202,13 +179,19 @@ export function createWishlistController() {
 		loadingUsers.set(false);
 	}
 
-	async function loadDataFor(userId: string) {
-		loadingWishes.set(true);
-		error.set(null);
+	async function loadDataFor(userId: string, { silent = false }: { silent?: boolean } = {}) {
+		// Silent refreshes (polling) update the data in place without toggling the
+		// loading spinner or surfacing transient errors.
+		if (!silent) {
+			loadingWishes.set(true);
+			error.set(null);
+		}
 		const { data: wishData, error: wishErr } = await fetchWishes(userId);
 		if (wishErr) {
-			error.set(wishErr.message);
-			loadingWishes.set(false);
+			if (!silent) {
+				error.set(wishErr.message);
+				loadingWishes.set(false);
+			}
 			return;
 		}
 
@@ -217,13 +200,15 @@ export function createWishlistController() {
 		const wishIds = (wishData ?? []).map((w) => w.id);
 		const { data: purchasedRows, error: purchasedErr } = await fetchPurchasesFor(wishIds);
 		if (purchasedErr) {
-			error.set(purchasedErr.message);
-			purchased.set([]);
+			if (!silent) {
+				error.set(purchasedErr.message);
+				purchased.set([]);
+			}
 		} else {
 			purchased.set(purchasedRows ?? []);
 		}
 
-		loadingWishes.set(false);
+		if (!silent) loadingWishes.set(false);
 	}
 
 	async function handleContinue() {
@@ -243,7 +228,7 @@ export function createWishlistController() {
 	async function handleViewChange(newUserId: string) {
 		viewingUserId.set(newUserId);
 		persistFilterPrefs({ friendViewId: newUserId });
-		unsubscribeRealtime();
+		// Polling restarts for the new viewer via the reactive startPolling($viewingUserId).
 		await loadDataFor(newUserId);
 	}
 
@@ -420,7 +405,7 @@ export function createWishlistController() {
 	}
 
 	function resetSelection() {
-		unsubscribeRealtime();
+		stopPolling();
 		identityUserId.set('');
 		viewingUserId.set('');
 		pendingUserId.set('');
@@ -486,8 +471,8 @@ export function createWishlistController() {
 			deleteWish,
 			togglePurchased,
 			setForm,
-			setupRealtime,
-			unsubscribeRealtime
+			startPolling,
+			stopPolling
 		}
 	};
 }

@@ -1,46 +1,64 @@
-import { supabase } from '$lib/supabaseClient';
-import type { WishInput } from '$lib/types';
+import type { Purchased, User, Wish, WishInput } from '$lib/types';
+
+type ServiceResult<T> = { data: T; error: { message: string } | null };
+
+const JSON_HEADERS = { 'content-type': 'application/json' };
+
+async function request<T>(path: string, init?: RequestInit): Promise<ServiceResult<T>> {
+	try {
+		const res = await fetch(path, init);
+		const text = await res.text();
+		const body = text ? JSON.parse(text) : null;
+		if (!res.ok) {
+			return { data: null as T, error: { message: body?.message ?? res.statusText } };
+		}
+		return { data: body as T, error: null };
+	} catch (e) {
+		return { data: null as T, error: { message: e instanceof Error ? e.message : 'Netzwerkfehler' } };
+	}
+}
 
 export async function fetchUsers() {
-	return supabase.from('users').select('id, name').order('name');
+	return request<User[]>('/api/users');
 }
 
 export async function fetchWishes(userId: string) {
-	return supabase.from('wishes').select('*').eq('user_id', userId);
+	return request<Wish[]>(`/api/wishes?userId=${encodeURIComponent(userId)}`);
 }
 
-export async function fetchPurchasesFor(ids: string[]) {
+export async function fetchPurchasesFor(ids: string[]): Promise<ServiceResult<Purchased[]>> {
 	if (!ids.length) return { data: [], error: null };
-	return supabase.from('purchased').select('*').in('wish_id', ids);
+	return request<Purchased[]>(`/api/purchased?wishIds=${ids.map(encodeURIComponent).join(',')}`);
 }
 
 export async function insertWish(userId: string, payload: WishInput) {
-	return supabase
-		.from('wishes')
-		.insert({
-			user_id: userId,
-			...payload
-		})
-		.select()
-		.single();
+	return request<Wish>('/api/wishes', {
+		method: 'POST',
+		headers: JSON_HEADERS,
+		body: JSON.stringify({ user_id: userId, ...payload })
+	});
 }
 
 export async function updateWish(wishId: string, payload: WishInput) {
-	return supabase.from('wishes').update(payload).eq('id', wishId).select().single();
+	return request<Wish>(`/api/wishes/${wishId}`, {
+		method: 'PATCH',
+		headers: JSON_HEADERS,
+		body: JSON.stringify(payload)
+	});
 }
 
 export async function removeWish(wishId: string) {
-	return supabase.from('wishes').delete().eq('id', wishId);
+	return request<null>(`/api/wishes/${wishId}`, { method: 'DELETE' });
 }
 
 export async function insertPurchase(wishId: string, userId: string) {
-	return supabase
-		.from('purchased')
-		.insert({ wish_id: wishId, user_id: userId })
-		.select()
-		.single();
+	return request<Purchased>('/api/purchased', {
+		method: 'POST',
+		headers: JSON_HEADERS,
+		body: JSON.stringify({ wish_id: wishId, user_id: userId })
+	});
 }
 
 export async function removePurchase(purchaseId: string) {
-	return supabase.from('purchased').delete().eq('id', purchaseId);
+	return request<null>(`/api/purchased/${purchaseId}`, { method: 'DELETE' });
 }
