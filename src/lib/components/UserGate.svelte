@@ -17,7 +17,12 @@
 
 		<label class="form-field">
 			<span>Wer bist du?</span>
-			<select class="input" value={pendingUserId} disabled={loading} onchange={(e) => onSelect((e.target as HTMLSelectElement).value)}>
+			<select
+				class="input"
+				value={pendingUserId}
+				disabled={loading}
+				onchange={(e) => onSelect((e.target as HTMLSelectElement).value)}
+			>
 				<option value="">Wähle deinen Namen</option>
 				{#if loading}
 					<option disabled>Lade Personen…</option>

@@ -3,7 +3,7 @@
 	import type { Purchased, SortMode, Wish } from '$lib/types';
 	import Icon from './Icon.svelte';
 
-let {
+	let {
 		wishes,
 		purchased,
 		isOwnerView,
@@ -56,12 +56,16 @@ let {
 	const safeLink = (value: string | null) => sanitizeWishLink(value);
 </script>
 
-
-
 <div class="card wish-card">
 	<div class="card-header">
 		<div class="card-heading">
-			<h3>{isOwnerView ? 'Meine Wunschliste' : viewingUserName ? `Wunschliste von ${viewingUserName}` : 'Wunschliste'}</h3>
+			<h3>
+				{isOwnerView
+					? 'Meine Wunschliste'
+					: viewingUserName
+						? `Wunschliste von ${viewingUserName}`
+						: 'Wunschliste'}
+			</h3>
 			{#if loading}
 				<span class="muted text-sm">Wird geladen…</span>
 			{/if}
@@ -115,118 +119,123 @@ let {
 				</li>
 			</ul>
 		{:else}
-			<p class="muted">{showOnlyAvailable && !isOwnerView ? 'Gerade nichts verfügbar.' : 'Noch keine Wünsche.'}</p>
+			<p class="muted">
+				{showOnlyAvailable && !isOwnerView ? 'Gerade nichts verfügbar.' : 'Noch keine Wünsche.'}
+			</p>
 		{/if}
-	{:else}
-		{#if loading}
-			<ul class="wish-list wish-list--placeholder" aria-live="polite">
-				{#each placeholderItems() as _, index (index)}
-					{@const primaryWidth = 60 + ((index % 3) * 10)}
-					{@const secondaryWidth = 40 + (((index + 1) % 3) * 15)}
-					<li class="wish wish--placeholder">
-						<div class="wish-main">
-							<div class="wish-placeholder-text">
-								<div class="skeleton skeleton-title" style={`width: ${primaryWidth}%`}></div>
-								<div class="skeleton skeleton-line" style={`width: ${secondaryWidth}%`}></div>
-								<div class="skeleton skeleton-line skeleton-line--short"></div>
-							</div>
-							<div class="wish-placeholder-actions">
-								<div class="skeleton skeleton-button"></div>
-								<div class="skeleton skeleton-button skeleton-button--ghost"></div>
-							</div>
+	{:else if loading}
+		<ul class="wish-list wish-list--placeholder" aria-live="polite">
+			{#each placeholderItems() as _, index (index)}
+				{@const primaryWidth = 60 + (index % 3) * 10}
+				{@const secondaryWidth = 40 + ((index + 1) % 3) * 15}
+				<li class="wish wish--placeholder">
+					<div class="wish-main">
+						<div class="wish-placeholder-text">
+							<div class="skeleton skeleton-title" style={`width: ${primaryWidth}%`}></div>
+							<div class="skeleton skeleton-line" style={`width: ${secondaryWidth}%`}></div>
+							<div class="skeleton skeleton-line skeleton-line--short"></div>
 						</div>
-						<div class="skeleton skeleton-pill"></div>
-					</li>
-				{/each}
-			</ul>
-		{:else}
-			<ul class="wish-list">
-				{#if isOwnerView && onAdd}
-					<li class="wish wish--add">
-						<button
-							type="button"
-							class="btn btn--primary wish-add-button"
-							onclick={onAdd}
-							aria-label="Wunsch hinzufügen"
-							title="Wunsch hinzufügen"
-						>
-							<Icon name="plus" size={18} />
-							<span>Wunsch hinzufügen</span>
-						</button>
-					</li>
-				{/if}
-				{#each visibleWishes() as wish}
-					{@const purchase = purchaseFor(wish.id)}
-					{@const link = safeLink(wish.link)}
-					<li class="wish">
-						<div class="wish-main">
-							<div>
-								<p class="wish-title">{wish.title}</p>
-								{#if link}
-									<a
-										class="wish-link"
-										href={link}
-										target="_blank"
-										rel="noreferrer noopener"
-									>
-										<Icon name="external" size={14} />
-										<span>Link öffnen</span>
-									</a>
-								{/if}
-								<p class="muted text-sm">Priorität: {priorityStars(wish.priority)}</p>
-							</div>
-							<div class="wish-actions">
-								{#if canEdit}
-									<button
-										class="btn btn--ghost btn-icon"
-										onclick={() => onEdit(wish)}
-										aria-label={`Wunsch "${wish.title}" bearbeiten`}
-										title={`Wunsch "${wish.title}" bearbeiten`}
-									>
-										<Icon name="edit" size={18} />
-										<span class="sr-only">Wunsch "{wish.title}" bearbeiten</span>
-									</button>
+						<div class="wish-placeholder-actions">
+							<div class="skeleton skeleton-button"></div>
+							<div class="skeleton skeleton-button skeleton-button--ghost"></div>
+						</div>
+					</div>
+					<div class="skeleton skeleton-pill"></div>
+				</li>
+			{/each}
+		</ul>
+	{:else}
+		<ul class="wish-list">
+			{#if isOwnerView && onAdd}
+				<li class="wish wish--add">
+					<button
+						type="button"
+						class="btn btn--primary wish-add-button"
+						onclick={onAdd}
+						aria-label="Wunsch hinzufügen"
+						title="Wunsch hinzufügen"
+					>
+						<Icon name="plus" size={18} />
+						<span>Wunsch hinzufügen</span>
+					</button>
+				</li>
+			{/if}
+			{#each visibleWishes() as wish}
+				{@const purchase = purchaseFor(wish.id)}
+				{@const link = safeLink(wish.link)}
+				<li class="wish">
+					<div class="wish-main">
+						<div>
+							<p class="wish-title">{wish.title}</p>
+							{#if link}
+								<a class="wish-link" href={link} target="_blank" rel="noreferrer noopener">
+									<Icon name="external" size={14} />
+									<span>Link öffnen</span>
+								</a>
+							{/if}
+							<p class="muted text-sm">Priorität: {priorityStars(wish.priority)}</p>
+						</div>
+						<div class="wish-actions">
+							{#if canEdit}
+								<button
+									class="btn btn--ghost btn-icon"
+									onclick={() => onEdit(wish)}
+									aria-label={`Wunsch "${wish.title}" bearbeiten`}
+									title={`Wunsch "${wish.title}" bearbeiten`}
+								>
+									<Icon name="edit" size={18} />
+									<span class="sr-only">Wunsch "{wish.title}" bearbeiten</span>
+								</button>
 								<button
 									class="btn btn--danger btn-icon"
 									onclick={() => onDelete(wish)}
-										aria-label={`Wunsch "${wish.title}" löschen`}
-										title={`Wunsch "${wish.title}" löschen`}
+									aria-label={`Wunsch "${wish.title}" löschen`}
+									title={`Wunsch "${wish.title}" löschen`}
+								>
+									<Icon name="trash" size={18} />
+									<span class="sr-only">Wunsch "{wish.title}" löschen</span>
+								</button>
+							{:else if !isOwnerView}
+								{#if purchase}
+									<button
+										class="btn"
+										onclick={() => onTogglePurchased(wish.id)}
+										disabled={purchase.user_id !== identityUserId}
 									>
-										<Icon name="trash" size={18} />
-										<span class="sr-only">Wunsch "{wish.title}" löschen</span>
+										{purchase.user_id === identityUserId
+											? 'Markierung entfernen'
+											: 'Schon von jemand anderem reserviert'}
 									</button>
-								{:else if !isOwnerView}
-									{#if purchase}
-										<button class="btn" onclick={() => onTogglePurchased(wish.id)} disabled={purchase.user_id !== identityUserId}>
-											{purchase.user_id === identityUserId ? 'Markierung entfernen' : 'Schon von jemand anderem reserviert'}
-										</button>
-									{:else}
-										<button class="btn btn--primary" onclick={() => onTogglePurchased(wish.id)}>Als gekauft markieren</button>
-									{/if}
+								{:else}
+									<button class="btn btn--primary" onclick={() => onTogglePurchased(wish.id)}
+										>Als gekauft markieren</button
+									>
 								{/if}
-							</div>
+							{/if}
 						</div>
-						{#if !isOwnerView && purchase}
-							<p class="pill">{purchase.user_id === identityUserId ? 'Von dir gekauft' : 'Gekauft'}</p>
-						{/if}
-					</li>
-				{/each}
-				{#if isOwnerView && onAdd && visibleWishes().length}
-					<li class="wish wish--add">
-						<button
-							type="button"
-							class="btn btn--primary wish-add-button"
-							onclick={onAdd}
-							aria-label="Weiteren Wunsch hinzufügen"
-							title="Weiteren Wunsch hinzufügen"
-						>
-							<Icon name="plus" size={18} />
-							<span>Weiteren Wunsch hinzufügen</span>
-						</button>
-					</li>
-				{/if}
-			</ul>
-		{/if}
+					</div>
+					{#if !isOwnerView && purchase}
+						<p class="pill">
+							{purchase.user_id === identityUserId ? 'Von dir gekauft' : 'Gekauft'}
+						</p>
+					{/if}
+				</li>
+			{/each}
+			{#if isOwnerView && onAdd && visibleWishes().length}
+				<li class="wish wish--add">
+					<button
+						type="button"
+						class="btn btn--primary wish-add-button"
+						onclick={onAdd}
+						aria-label="Weiteren Wunsch hinzufügen"
+						title="Weiteren Wunsch hinzufügen"
+					>
+						<Icon name="plus" size={18} />
+						<span>Weiteren Wunsch hinzufügen</span>
+					</button>
+				</li>
+			{/if}
+		</ul>
 	{/if}
 </div>
 
@@ -257,7 +266,6 @@ let {
 	.sort-select {
 		min-width: 150px;
 	}
-
 
 	.card-heading {
 		display: flex;
@@ -353,7 +361,12 @@ let {
 		display: block;
 		height: 0.8rem;
 		border-radius: 999px;
-		background: linear-gradient(90deg, var(--color-border), var(--color-border-strong), var(--color-border));
+		background: linear-gradient(
+			90deg,
+			var(--color-border),
+			var(--color-border-strong),
+			var(--color-border)
+		);
 		background-size: 200% 100%;
 		animation: skeleton-slide 1.3s ease infinite;
 	}

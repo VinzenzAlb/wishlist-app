@@ -1,10 +1,29 @@
 <script lang="ts">
-	let { open, title, onClose, children } = $props<{ open: boolean; title: string; onClose: () => void; children?: any }>();
+	let { open, title, onClose, children } = $props<{
+		open: boolean;
+		title: string;
+		onClose: () => void;
+		children?: any;
+	}>();
 </script>
 
 {#if open}
-	<div class="backdrop" role="presentation" tabindex="-1" onclick={onClose} onkeydown={(e) => e.key === 'Escape' && onClose()}>
-		<div class="modal" role="dialog" aria-modal="true" aria-label={title} tabindex="-1" onclick={(e) => e.stopPropagation()} onkeydown={(e) => e.key === 'Escape' && onClose()}>
+	<div
+		class="backdrop"
+		role="presentation"
+		tabindex="-1"
+		onclick={onClose}
+		onkeydown={(e) => e.key === 'Escape' && onClose()}
+	>
+		<div
+			class="modal"
+			role="dialog"
+			aria-modal="true"
+			aria-label={title}
+			tabindex="-1"
+			onclick={(e) => e.stopPropagation()}
+			onkeydown={(e) => e.key === 'Escape' && onClose()}
+		>
 			<div class="modal-header">
 				<h3>{title}</h3>
 				<button class="icon" onclick={onClose} aria-label="Schließen">×</button>

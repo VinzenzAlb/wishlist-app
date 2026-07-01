@@ -14,7 +14,10 @@ async function request<T>(path: string, init?: RequestInit): Promise<ServiceResu
 		}
 		return { data: body as T, error: null };
 	} catch (e) {
-		return { data: null as T, error: { message: e instanceof Error ? e.message : 'Netzwerkfehler' } };
+		return {
+			data: null as T,
+			error: { message: e instanceof Error ? e.message : 'Netzwerkfehler' }
+		};
 	}
 }
 

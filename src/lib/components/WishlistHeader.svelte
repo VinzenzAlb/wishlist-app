@@ -2,14 +2,7 @@
 	import type { User } from '$lib/types';
 	import Icon from './Icon.svelte';
 
-	let {
-	identityUserName,
-	viewingUserId,
-	viewingUserName,
-	users,
-	onChangeView,
-	onReset
-	} = $props<{
+	let { identityUserName, viewingUserId, viewingUserName, users, onChangeView, onReset } = $props<{
 		identityUserName: string;
 		viewingUserId: string;
 		viewingUserName: string;

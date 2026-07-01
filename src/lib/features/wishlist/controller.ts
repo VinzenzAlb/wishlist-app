@@ -1,4 +1,13 @@
-import { fetchPurchasesFor, fetchUsers, fetchWishes, insertPurchase, insertWish, removePurchase, removeWish, updateWish } from '$lib/services/wishlistService';
+import {
+	fetchPurchasesFor,
+	fetchUsers,
+	fetchWishes,
+	insertPurchase,
+	insertWish,
+	removePurchase,
+	removeWish,
+	updateWish
+} from '$lib/services/wishlistService';
 import type { Purchased, SortMode, User, Wish, WishInput } from '$lib/types';
 import { clearCookie, readCookie, writeCookie } from '$lib/utils/cookies';
 import { sanitizeWishLink } from './utils';
@@ -81,11 +90,19 @@ export function createWishlistController() {
 
 	let filterPrefs: FilterCookieValue = readFilterCookie() ?? {};
 
-	const canEdit = derived([viewingUserId, identityUserId], ([$viewing, $identity]) => Boolean($viewing && $viewing === $identity));
+	const canEdit = derived([viewingUserId, identityUserId], ([$viewing, $identity]) =>
+		Boolean($viewing && $viewing === $identity)
+	);
 	const isOwnerView = canEdit;
-	const viewingUserName = derived([users, viewingUserId], ([$users, $viewing]) => findUserName($users, $viewing));
-	const identityUserName = derived([users, identityUserId], ([$users, $identity]) => findUserName($users, $identity));
-	const friendOptions = derived([users, identityUserId], ([$users, $identity]) => $users.filter((u) => u.id !== $identity));
+	const viewingUserName = derived([users, viewingUserId], ([$users, $viewing]) =>
+		findUserName($users, $viewing)
+	);
+	const identityUserName = derived([users, identityUserId], ([$users, $identity]) =>
+		findUserName($users, $identity)
+	);
+	const friendOptions = derived([users, identityUserId], ([$users, $identity]) =>
+		$users.filter((u) => u.id !== $identity)
+	);
 
 	if (filterPrefs.sortMode) {
 		sortMode.set(filterPrefs.sortMode);
@@ -119,7 +136,7 @@ export function createWishlistController() {
 	}
 
 	function findUserName(list: User[], id: string) {
-		return id ? list.find((u) => u.id === id)?.name ?? 'Unbekannt' : 'Unbekannt';
+		return id ? (list.find((u) => u.id === id)?.name ?? 'Unbekannt') : 'Unbekannt';
 	}
 
 	function setForm(next: WishInput) {
@@ -383,13 +400,14 @@ export function createWishlistController() {
 	async function goFriends() {
 		activeView.set('friends');
 		const options = get(friendOptions);
-			if (!options.length) {
-				info.set('Noch keine Freunde hinzugefügt.');
-				return;
-			}
+		if (!options.length) {
+			info.set('Noch keine Freunde hinzugefügt.');
+			return;
+		}
 
 		const identity = get(identityUserId);
-		const hasOption = (id: string | null | undefined) => Boolean(id && options.some((o) => o.id === id));
+		const hasOption = (id: string | null | undefined) =>
+			Boolean(id && options.some((o) => o.id === id));
 		let target = get(viewingUserId);
 		if (!hasOption(target) || target === identity) {
 			const preferred = filterPrefs.friendViewId;

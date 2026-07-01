@@ -15,15 +15,29 @@
 <div class="form">
 	<label class="form-field">
 		<span>Titel *</span>
-		<input class="input" placeholder="Bilderrahmen" value={form.title} oninput={(e) => updateField('title', (e.target as HTMLInputElement).value)} />
+		<input
+			class="input"
+			placeholder="Bilderrahmen"
+			value={form.title}
+			oninput={(e) => updateField('title', (e.target as HTMLInputElement).value)}
+		/>
 	</label>
 	<label class="form-field">
 		<span>Link</span>
-		<input class="input" placeholder="https://beispiel.de" value={form.link ?? ''} oninput={(e) => updateField('link', (e.target as HTMLInputElement).value)} />
+		<input
+			class="input"
+			placeholder="https://beispiel.de"
+			value={form.link ?? ''}
+			oninput={(e) => updateField('link', (e.target as HTMLInputElement).value)}
+		/>
 	</label>
 	<label class="form-field">
 		<span>Priorität</span>
-		<select class="input" value={form.priority} onchange={(e) => updateField('priority', Number((e.target as HTMLSelectElement).value))}>
+		<select
+			class="input"
+			value={form.priority}
+			onchange={(e) => updateField('priority', Number((e.target as HTMLSelectElement).value))}
+		>
 			<option value={1}>★</option>
 			<option value={2}>★★</option>
 			<option value={3}>★★★</option>
