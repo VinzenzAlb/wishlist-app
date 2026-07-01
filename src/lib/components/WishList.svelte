@@ -160,7 +160,7 @@
 					</button>
 				</li>
 			{/if}
-			{#each visibleWishes() as wish}
+			{#each visibleWishes() as wish (wish.id)}
 				{@const purchase = purchaseFor(wish.id)}
 				{@const link = safeLink(wish.link)}
 				<li class="wish">

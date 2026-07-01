@@ -27,7 +27,7 @@
 				{#if loading}
 					<option disabled>Lade Personen…</option>
 				{:else}
-					{#each users as user}
+					{#each users as user (user.id)}
 						<option value={user.id}>{user.name}</option>
 					{/each}
 				{/if}

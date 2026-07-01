@@ -76,7 +76,7 @@
 			</p>
 		</div>
 		<div class="theme-toggle__options">
-			{#each themeOptions as option}
+			{#each themeOptions as option (option.id)}
 				<button
 					type="button"
 					class="theme-chip"

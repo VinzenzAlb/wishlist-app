@@ -2,10 +2,9 @@
 	import type { User } from '$lib/types';
 	import Icon from './Icon.svelte';
 
-	let { identityUserName, viewingUserId, viewingUserName, users, onChangeView, onReset } = $props<{
+	let { identityUserName, viewingUserId, users, onChangeView, onReset } = $props<{
 		identityUserName: string;
 		viewingUserId: string;
-		viewingUserName: string;
 		users: User[];
 		onChangeView: (id: string) => void;
 		onReset: () => void;
@@ -31,7 +30,7 @@
 				value={viewingUserId}
 				onchange={(e) => onChangeView((e.target as HTMLSelectElement).value)}
 			>
-				{#each users as user}
+				{#each users as user (user.id)}
 					<option value={user.id}>{user.name}</option>
 				{/each}
 			</select>

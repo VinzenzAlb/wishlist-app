@@ -24,8 +24,6 @@
 			activeView,
 			loadingUsers,
 			loadingWishes,
-			error,
-			info,
 			form,
 			editingWishId,
 			showModal,
@@ -93,7 +91,6 @@
 					<WishlistHeader
 						identityUserName={$identityUserName}
 						viewingUserId={$viewingUserId}
-						viewingUserName={$viewingUserName}
 						users={$friendOptions}
 						onChangeView={handleViewChange}
 						onReset={resetSelection}
