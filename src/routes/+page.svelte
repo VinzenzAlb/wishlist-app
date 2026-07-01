@@ -10,8 +10,6 @@
 	import { createWishlistController } from '$lib/features/wishlist/controller';
 	import { onDestroy, onMount } from 'svelte';
 
-	export const ssr = false;
-
 	const {
 		stores: {
 			users,

@@ -168,6 +168,8 @@
 						<div>
 							<p class="wish-title">{wish.title}</p>
 							{#if link}
+								<!-- link is an external, user-provided product URL, so it must not go through resolve() -->
+								<!-- eslint-disable-next-line svelte/no-navigation-without-resolve -->
 								<a class="wish-link" href={link} target="_blank" rel="noreferrer noopener">
 									<Icon name="external" size={14} />
 									<span>Link öffnen</span>
